@@ -10,12 +10,13 @@ namespace PSAI
 
         // Update starts after the loader has completed IMod.OnEnable and registered
         // the mod as running. Loader-owned coroutines reject the earlier call.
-        private void Update() { bridge?.Poll(); }
+        private void Update() { bridge?.Poll(); GameImages.Pump(this); }
 
         private void OnDestroy()
         {
             bridge?.Stop();
             bridge = null;
+            GameImages.Reset();
         }
     }
 }

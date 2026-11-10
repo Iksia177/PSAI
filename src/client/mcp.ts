@@ -6,8 +6,14 @@ import { BridgeClient } from './bridge.ts';
 const client = new BridgeClient();
 
 function output(value: unknown) {
-  return { content: [{ type: 'text' as const, text: JSON.stringify(value) }],
-    isError: (value as { status?: string }).status === 'error' };
+  const receipt = value as { status?: string; data?: { image_status?: string; image?: { mime_type: string; data: string } } };
+  const picture = receipt.data?.image;
+  const textValue = picture ? { ...receipt, data: { ...receipt.data, image: { mime_type: picture.mime_type } } } : value;
+  const content: ({ type: 'text'; text: string } | { type: 'image'; data: string; mimeType: string })[] = [
+    { type: 'text', text: JSON.stringify(textValue) },
+  ];
+  if (picture?.mime_type === 'image/png') content.push({ type: 'image', data: picture.data, mimeType: picture.mime_type });
+  return { content, isError: receipt.status === 'error' || receipt.status === 'uncertain' || receipt.data?.image_status === 'error' };
 }
 
 async function call(handler: () => Promise<unknown>) {
@@ -30,15 +36,16 @@ serveStdio(() => {
     }, () => call(() => client.send(tool)));
   }
   server.registerTool('psai_inspect', {
-    description: 'Query player-visible description, contents of an open container, or the visible machine panel. Use detail description, contents, or machine.',
-    inputSchema: { target: z.string(), detail: z.string().default('description') },
+    description: 'Query player-visible description, tooltip labels/effects, contents, machine, use_conditions (also supply item), or image. Image inspections first return image_status pending, then repeat to retrieve the rendered crop. Read image_targets/facilities from observe.',
+    inputSchema: { target: z.string(), detail: z.string().default('description'), item: z.string().optional() },
     annotations: { readOnlyHint: true },
   }, args => call(() => client.send('inspect', args)));
   server.registerTool('psai_act', {
-    description: 'Invoke one action from the latest observation. open_panel/close_panel need target, move_item needs item/destination, activate_item needs item. Use targets and inventories from the latest observation. Poll or observe after animations. Reuse command_id to query an existing intent.',
+    description: 'Invoke an action from the current observation. use_item_on needs item/target, dial_phone needs number, report_customer needs evidence. Upgrade purchases default to favor only; allow_cash true explicitly permits cash shortfall. Read labels/effects before use and close completed container windows. Observe after animations. Reuse command_id for the same intent.',
     inputSchema: {
       action: z.string(), expected_revision: z.number().int().nonnegative(), session_id: z.string(),
       command_id: z.string().optional(), target: z.string().optional(), item: z.string().optional(), destination: z.string().optional(), count: z.number().int().positive().optional(),
+      number: z.string().regex(/^[0-9]{1,9}$/).optional(), allow_cash: z.boolean().optional(), evidence: z.string().optional(),
     }, annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
   }, args => call(() => {
     const { expected_revision, command_id, session_id, ...action } = args;

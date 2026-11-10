@@ -18,7 +18,7 @@ async function fixture() {
 }
 
 // This peer exercises disk transport only. Gameplay acceptance requires the actual Unity process.
-function peer(directory: string) {
+function peer(directory: string, responseData = (request: Request): unknown => ({ revision: 1, received: request.arguments })) {
   let closed = false;
   const seen = new Set<string>();
   const task = (async () => {
@@ -28,7 +28,7 @@ function peer(directory: string) {
         seen.add(file);
         const request = JSON.parse(await readFile(join(directory, file), 'utf8')) as Request;
         const result = { session_id: request.session_id, command_id: request.command_id, status: 'completed', request,
-          data: { revision: 1, received: request.arguments } };
+          data: responseData(request) };
         await writeFile(join(directory, `result-${request.session_id}-${request.command_id}.json`), JSON.stringify(result));
         await unlink(join(directory, file));
       }
@@ -141,7 +141,10 @@ test('CLI executes through its public entry point and emits JSON', async () => {
 
 test('MCP stdio initializes, lists all six tools and calls bridge status', async () => {
   const { directory } = await fixture();
-  const game = peer(directory);
+  const pixel = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6G5sAAAAASUVORK5CYII=';
+  const game = peer(directory, request => request.arguments.detail === 'image'
+    ? { image_status: 'ready', image: { mime_type: 'image/png', data: pixel } }
+    : { received: request.arguments });
   const preferences = resolve('psai.preferences.example.json');
   const child = spawn(process.execPath, ['src/client/mcp.ts'], {
     env: { ...process.env, PSAI_DATA_DIR: directory, PSAI_PREFERENCES_FILE: preferences }, stdio: ['pipe', 'pipe', 'pipe'],
@@ -165,7 +168,7 @@ test('MCP stdio initializes, lists all six tools and calls bridge status', async
       if (Date.now() > deadline || child.exitCode !== null) throw new Error('MCP response missing ' + stderr);
       await delay(10);
     }
-    return messages.get(id) as { result: { instructions?: string; tools?: { name: string }[]; content?: { text: string }[] }; error?: unknown };
+    return messages.get(id) as { result: { instructions?: string; tools?: { name: string }[]; content?: { text?: string; type?: string; data?: string }[] }; error?: unknown };
   };
   try {
     send({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'psai-tests', version: '0.1.0' } } });
@@ -178,14 +181,26 @@ test('MCP stdio initializes, lists all six tools and calls bridge status', async
     assert.deepEqual(tools.map(tool => tool.name).sort(), ['psai_act', 'psai_actions', 'psai_inspect', 'psai_observe', 'psai_result', 'psai_status']);
     send({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'psai_status', arguments: {} } });
     const response = await wait(3);
-    assert.equal(JSON.parse(response.result.content![0]!.text).session_id, 'session-a');
-    assert.equal(JSON.parse(response.result.content![0]!.text).guidance.mode, 'advisory');
-    assert.deepEqual(JSON.parse(response.result.content![0]!.text).guidance, await loadGuidance(preferences));
+    assert.equal(JSON.parse(response.result.content![0]!.text!).session_id, 'session-a');
+    assert.equal(JSON.parse(response.result.content![0]!.text!).guidance.mode, 'advisory');
+    assert.deepEqual(JSON.parse(response.result.content![0]!.text!).guidance, await loadGuidance(preferences));
     send({ jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'psai_act', arguments: {
       action: 'open_panel', target: 'poster_stash', expected_revision: 1, session_id: 'session-a',
     } } });
-    const action = JSON.parse((await wait(4)).result.content![0]!.text);
+    const action = JSON.parse((await wait(4)).result.content![0]!.text!);
     assert.equal(action.status, 'completed');
     assert.deepEqual(action.data.received, { action: 'open_panel', target: 'poster_stash' });
+    send({ jsonrpc: '2.0', id: 5, method: 'tools/call', params: { name: 'psai_inspect', arguments: { detail: 'use_conditions', item: 'item-1', target: 'item-2' } } });
+    assert.deepEqual(JSON.parse((await wait(5)).result.content![0]!.text!).data.received,
+      { detail: 'use_conditions', item: 'item-1', target: 'item-2' });
+    send({ jsonrpc: '2.0', id: 6, method: 'tools/call', params: { name: 'psai_act', arguments: {
+      action: 'button-1', allow_cash: false, expected_revision: 1, session_id: 'session-a',
+    } } });
+    assert.deepEqual(JSON.parse((await wait(6)).result.content![0]!.text!).data.received, { action: 'button-1', allow_cash: false });
+    send({ jsonrpc: '2.0', id: 7, method: 'tools/call', params: { name: 'psai_inspect', arguments: { detail: 'image', target: 'wanted_paper' } } });
+    const image = (await wait(7)).result.content!;
+    assert.equal(image[1]!.type, 'image');
+    assert.equal(image[1]!.data, pixel);
+    assert.equal(JSON.parse(image[0]!.text!).data.image.data, undefined);
   } finally { child.stdin.end(); child.kill(); await game.stop(); }
 });

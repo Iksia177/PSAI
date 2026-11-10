@@ -2,7 +2,7 @@
 
 Probably Stolen Agent Interface，为 Steam 版《深空当铺：可能是偷的》提供 agent 游玩接口。
 
-当前为实验性 v0.1，已经实现游戏内 JSON 桥接、CLI 和 MCP 入口，并实机完成第 1 天普通营业、进入第 2 天早晨。日结界面的读取与关闭、鉴定细节、局部图像及部分异常场景仍待验证或补齐，完整进度见 `docs/STATUS.md`。
+当前为实验性 v0.1，基础营业、容器、日结报告及水培生产已通过实机测试。中期扩展已增加原版悬浮说明、电话、加点支付校验、夜间外出、材料作用于目标、通缉图像与第 3 版指导，待中期存档副本实机验收。完整进度见 `docs/STATUS.md`。
 
 ## 已确认的方向
 
@@ -67,7 +67,7 @@ node src/client/cli.ts act '{"action":"open_panel","target":"<panel_id>"}' --rev
 
 ## 跨会话游玩偏好
 
-CLI 和 MCP 的 `status`、`observe` 返回 `guidance`，包含偏好版本和按 priority 从小到大排列的建议。第 2 版默认优先整理闲置自有文件、将闲置物品收入可接收且用途合适的容器、使具备条件的机器运转，并根据实际运行及供电需求判断夜间用电。机器投入物和投入顺序由模型结合可见说明、现有材料与当前目标自行选择。用户当前指令优先，agent 结合交易、展示和生产用途决定具体动作。
+CLI 和 MCP 的 `status`、`observe` 返回 `guidance`，包含偏好版本和按 priority 从小到大排列的建议。第 3 版增加操作前读取标签与效果、当前容器窗口用后关闭、按展示柜经营效果选择陈列、约每 4 天检查加点并平衡主动与被动项目，以及条件满足时优先接受 NPC 事件。原有收纳、机器运行和按需用电建议继续提供，机器投入物由模型判断。用户当前指令优先。
 
 默认偏好随接口代码分发。需要覆盖时，将示例复制为本机文件，并向 CLI 或 MCP 进程传入环境变量。覆盖文件提供完整规则列表，删除某条规则即可去掉相应偏好。
 
@@ -78,6 +78,22 @@ node src/client/cli.ts status
 ```
 
 MCP harness 使用同名环境变量设置绝对路径。配置错误时返回默认偏好，并在 guidance.error 标记 preferences_invalid_or_unreadable。本机覆盖文件已被 Git 忽略。
+
+## 中期交互
+
+`inspect` 增加 `tooltip`、`use_conditions` 和 `image`。tooltip 读取原版悬浮说明，包含当前条件下的标签与效果。use_conditions 需要 item 与 target，返回正常作用条件，执行动作是 use_item_on。可见选项的 tooltip_target 用于查询选项说明。展示柜客户效果通过 open_clientele 打开，读取屏幕或查询 display_case 的 tooltip，完成后 close_clientele。
+
+```powershell
+node src/client/cli.ts inspect '{"target":"<item_id>","detail":"tooltip"}'
+node src/client/cli.ts inspect '{"item":"<source_id>","target":"<target_id>","detail":"use_conditions"}'
+node src/client/cli.ts act '{"action":"use_item_on","item":"<source_id>","target":"<target_id>"}' --session <session_id> --revision <revision>
+```
+
+电话使用 open_phone、dial_phone、phone_advance、phone-choice-*、hang_up 和 close_phone。number 为 1～9 位数字字符串，通讯录、拨号状态与通话对白按可见内容读取。加点菜单通过正常电话打开，项目选择和购买动作来自当前 actions。购买动作的 payment 字段说明费用、专用币和默认支付可用性，默认专用币不足时拒绝，明确携带 allow_cash=true 可允许原版现金补差。save_context 提供原版加点浏览间隔与按存档归属的购买记录。
+
+夜间使用 open_outside_confirmation 进入正常出发确认，地图中的 travel-* 对应已发现地点。转场期间 busy=true，到达后读取场景面板、商品、随身库存和正常按钮。afterhour_ground 是地上物品，返回前需转入正常随身槽位。return_store 使用原版返回与遗留物品确认，通用确认框提供 confirm_prompt / cancel_prompt。垃圾场、科技商店、食品商店的具体行为待中期副本实测。
+
+image_targets 提供当前可查询的图像目标。inspect image 首次返回 image_status=pending，随后重复查询获取 image/png。图像来自游戏渲染帧的局部裁切，MCP 以图像内容返回，CLI JSON 包含 Base64 数据。当前目标包括可见顾客和已打开的通缉页。report_customer 要求 evidence，身份由模型结合可见资料判断。
 
 ## 项目文档
 

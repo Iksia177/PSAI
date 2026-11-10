@@ -27,7 +27,18 @@ try {
         @('ModHelper', 'ReadModDataFileText', 2),
         @('ModHelper', 'WriteModDataFileText', 3),
         @('ModHelper', 'ListModDataFiles', 1),
-        @('ModScanner', 'Scan', 4)
+        @('ModScanner', 'Scan', 4),
+        @('GameItemElement', 'GetTooltip', 0),
+        @('GameItem', 'MayTarget', 1),
+        @('GameItem', 'CanTarget', 1),
+        @('GameItem', 'Target', 1),
+        @('PhoneUIManager', 'PressNumber', 1),
+        @('PhoneUIManager', 'StartCalling', 0),
+        @('DialoguePhoneUIManager', 'OnAdvancePressed', 0),
+        @('WildNetworkUI', 'get_IsOpen', 0),
+        @('MapUIManager', 'Travel', 1),
+        @('AfterhourLocation', 'GetDiscovered', 0),
+        @('StoreSecButton', 'GetTooltip', 0)
     )
     $checks = @($required | ForEach-Object {
         $typeName, $methodName, $parameterCount = $_

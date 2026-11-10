@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 namespace PSAI
 {
-    internal sealed class GameAdapter
+    internal sealed partial class GameAdapter
     {
         private readonly Dictionary<GameItem, string> itemIds = new Dictionary<GameItem, string>();
         private readonly Dictionary<string, GameItem> items = new Dictionary<string, GameItem>();
@@ -42,6 +42,7 @@ namespace PSAI
         {
             itemIds.Clear(); items.Clear(); inventories.Clear(); actions.Clear(); panels.Clear();
             inventoryViews.Clear(); panelList.Clear(); nextItem = 0;
+            ClearMidgame();
         }
 
         internal void RestoreOptions()
@@ -59,6 +60,7 @@ namespace PSAI
         {
             items.Clear(); inventories.Clear(); actions.Clear(); panels.Clear(); inventoryViews.Clear(); panelList.Clear();
             panelActions = new JArray();
+            ClearMidgameViews();
             var snapshot = new JObject { ["ready"] = Ready, ["controlled"] = controlledOptions != null };
             if (!Ready) return snapshot;
             var store = PlayerStore.Instance;
@@ -87,6 +89,8 @@ namespace PSAI
             AddInventory("display_case", entry.showcaseElement, entry.showcaseWindow, stock);
             AddInventory("documents", entry.docInvElement, entry.docInvWindow, stock);
             AddInventory("trash_fixture", entry.trashInvElement, entry.trashInvWindow, stock);
+            AddInventory("response", entry.responseInventory, entry.responseWindow, stock);
+            AddInventory("response_closable", entry.responseInventoryClosable, entry.responseWindowClosable, stock);
             AddPanel("display_case", "展示柜", entry.showcaseWindow, null, null, null, stock);
             if (entry.dossier != null && PanelVisible(entry.docInvWindow))
                 AddItemPanel(entry.dossier, stock);
@@ -100,7 +104,6 @@ namespace PSAI
                     () => { if (poster.isPulled) poster.OnClick(); }, stock);
             }
             snapshot["inventories"] = stock;
-            snapshot["panels"] = new JArray(panelList.Select(panel => panel.View));
             var screens = new JArray();
             AddScreen("trade", NegociationUIManager.Instance?.uiObject, screens, available);
             AddScreen("bargain", BargainUIManager.Instance?.uiObject, screens, available);
@@ -111,6 +114,8 @@ namespace PSAI
             if (calendar != null && calendar.UIPanel != null && calendar.UIPanel.activeInHierarchy)
                 AddAction(available, "close_calendar_report", "Close the calendar and daily report", calendar.CloseUI);
             AddScreen("close_shop_confirmation", StoreUIManager.Instance.closeShutterConfirmationPanel, screens, available);
+            CaptureMidgame(snapshot, screens, available, stock);
+            snapshot["panels"] = new JArray(panelList.Select(panel => panel.View));
             snapshot["screens"] = screens;
 
             AddAction(available, "begin_control", "Use manual dialogue and customer progression", () => {
@@ -140,7 +145,10 @@ namespace PSAI
                     if (index < 0 || index >= dialogue.currentDialog.choices.Count) continue;
                     var enabled = dialogue.currentDialog.IsChoiceEnabledAt(index);
                     var id = "choice-" + index;
-                    available.Add(new JObject { ["action"] = id, ["label"] = Text(bubble.TMP), ["enabled"] = enabled });
+                    var choiceItem = dialogue.currentDialog.choices[index].Item1;
+                    available.Add(new JObject { ["action"] = id, ["label"] = Text(bubble.TMP), ["enabled"] = enabled,
+                        ["tooltip_target"] = choiceItem == null ? null : RegisterItem(choiceItem),
+                        ["fully_displayed"] = bubble.TMP != null && bubble.TMP.GetParsedText().Length <= bubble.TMP.maxVisibleCharacters });
                     if (enabled) actions[id] = bubble.OnDialogChoiceClick;
                 }
                 if ((int) store.storeState == 1 && store.CanNextClient())
@@ -162,6 +170,10 @@ namespace PSAI
                     ["parameters"] = new JArray("item", "destination", "count (optional)"), ["enabled"] = true });
                 available.Add(new JObject { ["action"] = "activate_item", ["label"] = "Perform the item's normal activate operation",
                     ["parameters"] = new JArray("item"), ["enabled"] = true });
+                available.Add(new JObject { ["action"] = "use_item_on", ["label"] = "Use a visible item on a visible target after inspecting use_conditions",
+                    ["parameters"] = new JArray("item", "target"), ["enabled"] = true });
+                available.Add(new JObject { ["action"] = "toggle_item", ["label"] = "Use the item's normal toggle after inspecting its tooltip",
+                    ["parameters"] = new JArray("item"), ["enabled"] = true });
             }
             if (!busy && store.lockAllInventoryFlag == 0 && panelList.Count > 0)
             {
@@ -176,6 +188,9 @@ namespace PSAI
                 panel.View["can_open"] = !busy && store.lockAllInventoryFlag == 0 && panel.Open != null;
                 panel.View["can_close"] = !busy && store.lockAllInventoryFlag == 0 && panel.Close != null;
             }
+            if (busy)
+                foreach (var option in available.OfType<JObject>().Where(option => option.Value<string>("action") != "end_control"))
+                    option["enabled"] = false;
             snapshot["actions"] = available;
             foreach (var stale in itemIds.Keys.Where(item => !items.ContainsValue(item)).ToArray()) itemIds.Remove(stale);
             return snapshot;
@@ -311,16 +326,22 @@ namespace PSAI
             });
             foreach (var button in root.GetComponentsInChildren<Button>(false))
             {
-                if (!button.isActiveAndEnabled || !button.IsInteractable()) continue;
+                if (!button.isActiveAndEnabled) continue;
                 var target = "button-" + button.GetInstanceID();
-                if (actions.ContainsKey(target)) continue;
+                if (available.OfType<JObject>().Any(option => option.Value<string>("action") == target)) continue;
                 var label = string.Join(" ", button.GetComponentsInChildren<TextMeshProUGUI>(false).Select(Text).Where(text => text.Length > 0));
                 if (label.Length == 0) label = button.gameObject.name;
+                if (!button.IsInteractable())
+                {
+                    available.Add(new JObject { ["action"] = target, ["label"] = label, ["enabled"] = false });
+                    continue;
+                }
                 AddAction(available, target, label, () => {
                     if (button == null || !button.isActiveAndEnabled || !button.IsInteractable())
                         throw new InvalidOperationException("button_not_available");
                     button.onClick.Invoke();
                 });
+                RegisterPaymentButton(button, target, available);
             }
         }
 
@@ -341,6 +362,7 @@ namespace PSAI
 
         private static bool IsBusy(PlayerStore store)
         {
+            if (MapUIManager.Instance != null && MapUIManager.Instance.IsInTransit) return true;
             if (store.isHandlingShootout || store.isClientBeingArrested ||
                 (store.currentClientInstance != null && !store.isClientArrived)) return true;
             var blackscreen = StoreUIManager.Instance.blackscreen;
@@ -360,6 +382,8 @@ namespace PSAI
         {
             var target = args.Value<string>("target") ?? "";
             var detail = args.Value<string>("detail") ?? "description";
+            var extended = InspectMidgame(target, detail, args);
+            if (extended != null) return extended;
             if (detail == "contents" || detail == "machine")
             {
                 if (detail == "contents" && inventoryViews.TryGetValue(target, out var inventory))
@@ -387,6 +411,8 @@ namespace PSAI
             }
             if (IsBusy(PlayerStore.Instance))
                 throw new InvalidOperationException("game_busy");
+            var extended = ExecuteMidgame(args);
+            if (extended != null) return extended;
             if (action == "open_panel" || action == "close_panel")
             {
                 if (PlayerStore.Instance.lockAllInventoryFlag > 0) throw new InvalidOperationException("inventory_locked");
