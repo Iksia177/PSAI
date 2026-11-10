@@ -1,0 +1,25 @@
+{
+  "name": "psai",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Probably Stolen Agent Interface CLI and MCP adapter",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "build": "tsc",
+    "check": "tsc --noEmit",
+    "test": "node --test tests/*.test.ts",
+    "cli": "node src/client/cli.ts",
+    "mcp": "node src/client/mcp.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.4.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "7.0.2"
+  }
+}

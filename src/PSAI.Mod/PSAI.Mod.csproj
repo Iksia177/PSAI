@@ -16,6 +16,18 @@
       <HintPath>$(GameManagedDirectory)\UnityEngine.CoreModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(GameManagedDirectory)\UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>$(GameManagedDirectory)\Unity.TextMeshPro.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(GameManagedDirectory)\Newtonsoft.Json.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
   <Target Name="ValidateGameDirectory" BeforeTargets="ResolveReferences">
     <Error Condition="!Exists('$(GameManagedDirectory)\Assembly-CSharp.dll')"

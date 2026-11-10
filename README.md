@@ -2,7 +2,7 @@
 
 Probably Stolen Agent Interface，为 Steam 版《深空当铺：可能是偷的》提供 agent 游玩接口。
 
-当前处于开发准备阶段。仓库包含可编译的原生模组骨架、离线构建与检查脚本，以及后续实现方案。游戏内骨架仅输出生命周期日志，CLI、MCP、观察与动作协议将在下一阶段实现。
+当前为实验性 v0.1，已经实现游戏内 JSON 桥接、CLI 和 MCP 入口，正在等待实机加载验证。自动测试覆盖外部通信与工具入口，游戏内操作的验收进度见 `docs/STATUS.md`。
 
 ## 已确认的方向
 
@@ -28,11 +28,40 @@ pwsh -NoProfile -File scripts/Scan.ps1
 
 产物位于 `artifacts/psai/`，仅包含模组 DLL 和清单。扫描结果保存在 `artifacts/scan.json`，静态检查结果保存在 `artifacts/compatibility.json`。这些生成文件均被 Git 忽略。
 
-游戏内加载需要把产物放入游戏的 `Mods/psai/`，在模组菜单启用后重启。当前骨架的预期效果是出现 `[PSAI ...]` 生命周期日志，完整实机加载留待下一阶段验证。
+退出游戏后运行 `pwsh -NoProfile -File scripts/Install.ps1` 安装到 `Mods/psai/`。安装器先扫描，再核对已有文件及安装回执，校验复制后的哈希。在模组菜单启用后重启并载入独立测试存档。
+
+## CLI 与 MCP
+
+Node.js 24 可以直接运行本项目的 TypeScript 入口。安装锁定依赖后执行检查与测试。
+
+```powershell
+npm ci --ignore-scripts --registry=https://registry.npmjs.org
+npm run check
+npm run build
+npm test
+node src/client/cli.ts status
+node src/client/cli.ts observe
+node src/client/cli.ts actions
+```
+
+CLI 默认使用当前用户的 `AppData/LocalLow/Questing Goose Studio/Probably Stolen/ModData/psai`。可使用 `--data-dir` 或 `PSAI_DATA_DIR` 指定路径。`observe` 回执提供 `session_id` 和 `data.revision`，动作必须携带这两个值。
+
+```powershell
+node src/client/cli.ts act '{"action":"begin_control"}' --revision 1 --session <session_id>
+node src/client/cli.ts inspect '{"target":"item-1","detail":"description"}'
+node src/client/cli.ts result <command_id> --session <session_id>
+```
+
+实际 revision 与对象 ID 来自最新观察。`begin_control` 临时切换到手动对话和手动叫号，`end_control` 恢复原选项。工具输出是结构化数据，游戏中的文本按游戏内容处理。
+
+MCP stdio 启动命令为 `node D:/CodexWork/PSAI/src/client/mcp.ts`。在支持 MCP 的 harness 中将它配置为本地 stdio 服务，可选设置 `PSAI_DATA_DIR`。工具为 `psai_status`、`psai_observe`、`psai_inspect`、`psai_actions`、`psai_act`、`psai_result`。`psai_act` 明确要求观察中的 `session_id` 和 `expected_revision`。
+
+`act` 返回 completed 表示正常操作处理函数已返回，随后应重新观察动画和后续面板。超时使用原命令 ID 查询，重试复用同一 ID 和完全相同参数。uncertain 表示需要重新观察后判断实际结果。当前 `inspect` 支持可见物品说明，鉴定细节与局部图像仍待扩展。
 
 ## 项目文档
 
 - [设计与验收约定](docs/DESIGN.md)
 - [本轮准备结果与下一轮入口](docs/STATUS.md)
+- [自动检查与实机验收步骤](docs/TESTING.md)
 
 本仓库从本地 Git 开始记录开发。首轮功能验收后再配置 GitHub 仓库与推送。版本管理覆盖源码、脚本和文档，本机配置、游戏程序集、存档、日志、运行消息和构建产物通过忽略规则排除。
