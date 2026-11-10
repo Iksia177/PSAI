@@ -90,7 +90,7 @@ namespace PSAI
                 ["tools"] = new JArray("status", "observe", "inspect", "actions", "act", "result"),
                 ["features"] = new JArray("visible_tooltips", "targeted_item_use", "telephone", "upgrade_payment_guard", "afterhour", "visible_image_crops",
                     "response_choices", "contact_cards", "authorized_wanted_identity", "operation_discovery", "rent_obligations",
-                    "outing_state", "firearm_actions", "visible_ownership")
+                    "outing_state", "firearm_actions", "visible_ownership", "scripted_dialogue")
             };
         }
 

@@ -134,9 +134,16 @@ namespace PSAI
             if (controlledOptions != null) AddAction(available, "end_control", "Restore previous dialogue options", RestoreOptions);
             var busy = IsBusy(store);
             snapshot["busy"] = busy;
-            if (!busy)
+            var scriptedDialogue = CanAdvanceScriptedDialogue(store);
+            snapshot["dialogue_state"] = new JObject {
+                ["waiting_for_click"] = dialogue.isWaitingForManualAdvance,
+                ["scripted_event"] = store.isHandlingShootout,
+                ["can_interact"] = (!busy || scriptedDialogue) &&
+                    (dialogue.currentDialog != null || dialogue.isWaitingForManualAdvance)
+            };
+            if (!busy || scriptedDialogue)
             {
-                if (dialogue.currentDialog != null)
+                if (dialogue.currentDialog != null || dialogue.isWaitingForManualAdvance)
                     AddAction(available, "dialogue_advance", "Advance the displayed dialogue", dialogue.OnAdvancePressed);
                 foreach (var bubble in dialogue.dialogChoiceBubbles)
                 {
@@ -151,6 +158,9 @@ namespace PSAI
                         ["fully_displayed"] = bubble.TMP != null && bubble.TMP.GetParsedText().Length <= bubble.TMP.maxVisibleCharacters });
                     if (enabled) actions[id] = bubble.OnDialogChoiceClick;
                 }
+            }
+            if (!busy)
+            {
                 if ((int) store.storeState == 1 && store.CanNextClient())
                     AddAction(available, "call_next", "Call the next customer", store.TryCallNextClient);
                 if (!StoreUIManager.Instance.isShootingMode && store.currentClientInstance != null && store.CanDismissCurrentClient())
@@ -189,7 +199,8 @@ namespace PSAI
                 panel.View["can_close"] = !busy && store.lockAllInventoryFlag == 0 && panel.Close != null;
             }
             if (busy)
-                foreach (var option in available.OfType<JObject>().Where(option => option.Value<string>("action") != "end_control"))
+                foreach (var option in available.OfType<JObject>().Where(option => option.Value<string>("action") != "end_control" &&
+                    !(scriptedDialogue && IsDialogueAction(option.Value<string>("action") ?? ""))))
                     option["enabled"] = false;
             snapshot["actions"] = available;
             foreach (var stale in itemIds.Keys.Where(item => !items.ContainsValue(item)).ToArray()) itemIds.Remove(stale);
@@ -402,9 +413,22 @@ namespace PSAI
 
         private static bool IsBusy(PlayerStore store)
         {
+            return store.isHandlingShootout || store.isClientBeingArrested || IsWorldMoving(store);
+        }
+
+        private static bool IsDialogueAction(string action) => action == "dialogue_advance" || action.StartsWith("choice-", StringComparison.Ordinal);
+
+        private static bool CanAdvanceScriptedDialogue(PlayerStore store)
+        {
+            var dialogue = DialogUIManager.Instance;
+            return store.isHandlingShootout && !store.isClientBeingArrested && !IsWorldMoving(store) &&
+                (dialogue.currentDialog != null || dialogue.isWaitingForManualAdvance);
+        }
+
+        private static bool IsWorldMoving(PlayerStore store)
+        {
             if (MapUIManager.Instance != null && MapUIManager.Instance.IsInTransit) return true;
-            if (store.isHandlingShootout || store.isClientBeingArrested ||
-                (store.currentClientInstance != null && !store.isClientArrived)) return true;
+            if (store.currentClientInstance != null && !store.isClientArrived && !store.isHandlingShootout) return true;
             var blackscreen = StoreUIManager.Instance.blackscreen;
             if (blackscreen != null && blackscreen.isActiveAndEnabled && blackscreen.color.a > 0.001f) return true;
             var shutter = StoreShutterButton.Instance;
@@ -449,7 +473,8 @@ namespace PSAI
                 RestoreOptions();
                 return new JObject { ["invoked"] = true };
             }
-            if (IsBusy(PlayerStore.Instance))
+            if (IsBusy(PlayerStore.Instance) &&
+                !(CanAdvanceScriptedDialogue(PlayerStore.Instance) && IsDialogueAction(action) && actions.ContainsKey(action)))
                 throw new InvalidOperationException("game_busy");
             var extended = ExecuteMidgame(args);
             if (extended != null) return extended;

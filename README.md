@@ -58,6 +58,8 @@ MCP stdio 启动命令为 `node D:/CodexWork/PSAI/src/client/mcp.ts`。在支持
 
 `act` 返回 completed 表示正常操作处理函数已返回，随后应重新观察动画和后续面板。超时使用原命令 ID 查询，重试复用同一 ID 和完全相同参数。uncertain 表示需要重新观察后判断实际结果。
 
+剧情事件的 busy 表示普通游戏操作受限。若 dialogue_state.can_interact=true 且动作清单仍有启用的对白推进或选项，可按原版流程继续，动画与转场期间仍需等待。
+
 容器扩展包已实现 `panels` 观察字段、`open_panel` / `close_panel` 动作和 `contents` / `machine` 查询。固定容器存取、嵌套容器、交易期间自有容器读取、日结报告关闭，以及两台水培的槽位读取与真实夜间生产均已通过实机测试。`target` 取自最新观察的面板 ID，`move_item` 的 `destination` 取自已打开窗口中的库存 ID。固定展示柜为常驻区域，文档柜和垃圾桶的内部库存通过其物品窗口显示。机器面板按可见槽位返回库存及槽位标签，标签页仅读取当前选中页。鉴定细节与局部图像仍待扩展。
 
 ```powershell
