@@ -19,6 +19,14 @@ namespace PSAI
                 ["source"] = "original_account_state"
             };
             AddScreen("rent_reminder", StartOfDayUIManager.Instance?.rentReminder, screens, available);
+            var commissary = CommissaryUIManager.Instance;
+            if (commissary != null && commissary.panel.activeInHierarchy)
+                snapshot["food_products"] = new JArray(commissary.panel.GetComponentsInChildren<CommissaryElement>(false)
+                    .Where(product => product.isActiveAndEnabled && !string.IsNullOrEmpty(product.id)).Select(product => new JObject {
+                        ["name"] = Text(product.productName), ["price"] = Text(product.price), ["stock"] = Text(product.stock),
+                        ["can_buy"] = CommissaryUIManager.CanBuy(product.id),
+                        ["action"] = product.buyButton == null ? null : "button-" + product.buyButton.GetInstanceID()
+                    }));
             var client = store.IsClientPresent() ? store.currentClientInstance?.GetClientBlueprint() : null;
             if (client != null)
                 snapshot["customer_identity"] = new JObject {
@@ -153,6 +161,28 @@ namespace PSAI
             var cells = InventoryCapacity.CountUsableCells(shape.width, shape.height, shape.GetLocal);
             return new JObject { ["total_cells"] = cells, ["width"] = shape.width, ["height"] = shape.height,
                 ["source"] = "original_inventory_shape", ["includes_nested_containers"] = false };
+        }
+
+        private void AddMountedBackpack(GameItem item, JArray stock)
+        {
+            var id = RegisterItem(item);
+            if (panels.ContainsKey(id)) return;
+            var window = EmporiumEntry.Instance.afterhourWindow;
+            var inventoryId = "afterhour_backpack_contents";
+            if (item.contentWindow.childElement is GameInventory inventory)
+                AddInventory(inventoryId, inventory, window, stock, id, "背包内部");
+            var visible = inventoryViews.TryGetValue(inventoryId, out var contents);
+            if (visible) contents!["owner_item"] = id;
+            var view = new JObject {
+                ["id"] = id, ["name"] = item.GetDisplayName(true), ["owner_item"] = id,
+                ["kind"] = "container", ["presentation"] = "embedded", ["open"] = visible,
+                ["inventories"] = visible ? new JArray(inventoryId) : new JArray(),
+                ["text"] = new JArray(), ["controls"] = new JArray(),
+                ["can_open"] = false, ["can_close"] = false
+            };
+            var panel = new PanelTarget { Id = id, Window = window, View = view };
+            panels[id] = panel;
+            panelList.Add(panel);
         }
 
         private void AddValueControl(PanelTarget panel, string id, string label, bool enabled, JObject state, Action<JObject> callback)

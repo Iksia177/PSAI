@@ -225,6 +225,13 @@ namespace PSAI
         private void AddItemPanel(GameItem item, JArray stock)
         {
             if (item.contentWindow == null) return;
+            var entry = EmporiumEntry.Instance;
+            if (MapUIManager.Instance != null && MapUIManager.Instance.IsOutside &&
+                item.parentInventory == entry.afterhourPocketSlotInvBackpack)
+            {
+                AddMountedBackpack(item, stock);
+                return;
+            }
             var id = RegisterItem(item);
             AddPanel(id, item.GetDisplayName(true), item.contentWindow, item,
                 () => {

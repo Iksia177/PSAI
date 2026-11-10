@@ -149,9 +149,9 @@ namespace PSAI
             {
                 // The loose afterhour inventory is the ground; only pocket slots travel home.
                 AddInventory("afterhour_ground", EmporiumEntry.Instance.afterhourInventory, EmporiumEntry.Instance.afterhourWindow, stock);
-                AddInventory("afterhour_left", EmporiumEntry.Instance.afterhourPocketSlotInvLeft, EmporiumEntry.Instance.afterhourWindow, stock);
-                AddInventory("afterhour_right", EmporiumEntry.Instance.afterhourPocketSlotInvRight, EmporiumEntry.Instance.afterhourWindow, stock);
-                AddInventory("afterhour_backpack", EmporiumEntry.Instance.afterhourPocketSlotInvBackpack, EmporiumEntry.Instance.afterhourWindow, stock);
+                AddInventory("afterhour_left", EmporiumEntry.Instance.afterhourPocketSlotInvLeft, EmporiumEntry.Instance.afterhourWindow, stock, null, "口袋1");
+                AddInventory("afterhour_right", EmporiumEntry.Instance.afterhourPocketSlotInvRight, EmporiumEntry.Instance.afterhourWindow, stock, null, "口袋2");
+                AddInventory("afterhour_backpack", EmporiumEntry.Instance.afterhourPocketSlotInvBackpack, EmporiumEntry.Instance.afterhourWindow, stock, null, "背包槽");
                 AddInventory("bazaar", EmporiumEntry.Instance.bazarLeftinvElement, EmporiumEntry.Instance.bazarLeftInvWindow, stock);
             }
             var destinations = new JArray();
