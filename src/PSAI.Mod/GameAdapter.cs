@@ -88,11 +88,12 @@ namespace PSAI
                 controlledOptions.enableTypewriterEffect = false;
             });
             if (controlledOptions != null) AddAction(available, "end_control", "Restore previous dialogue options", RestoreOptions);
-            var busy = store.lockShutterButtonFlag > 0 || store.isHandlingShootout || store.isClientBeingArrested;
+            var busy = store.lockShutterButtonFlag > 0 || store.isHandlingShootout || store.isClientBeingArrested ||
+                (store.currentClientInstance != null && !store.isClientArrived);
             snapshot["busy"] = busy;
             if (!busy)
             {
-                if (dialogue.currentDialog != null && dialogue.isConversationActiveFlag > 0)
+                if (dialogue.currentDialog != null)
                     AddAction(available, "dialogue_advance", "Advance the displayed dialogue", dialogue.OnAdvancePressed);
                 foreach (var bubble in dialogue.dialogChoiceBubbles)
                 {
@@ -192,7 +193,8 @@ namespace PSAI
         internal JObject Execute(JObject args)
         {
             var action = args.Value<string>("action") ?? "";
-            if (PlayerStore.Instance.lockShutterButtonFlag > 0 || PlayerStore.Instance.isHandlingShootout || PlayerStore.Instance.isClientBeingArrested)
+            if (PlayerStore.Instance.lockShutterButtonFlag > 0 || PlayerStore.Instance.isHandlingShootout || PlayerStore.Instance.isClientBeingArrested ||
+                (PlayerStore.Instance.currentClientInstance != null && !PlayerStore.Instance.isClientArrived))
                 throw new InvalidOperationException("game_busy");
             if (action == "move_item")
             {

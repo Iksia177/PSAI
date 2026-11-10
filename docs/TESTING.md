@@ -50,4 +50,8 @@ Node 测试使用项目 `.cache/tests/` 中的隔离目录和文件通信测试�
 
 2026-11-10 的日志确认 PSAI 已加载。初版在 IMod.OnEnable 中调用 ModHelper.StartCoroutine，当时加载器尚未将模组登记为运行中，该方法直接返回 null。心跳从未启动，因此客户端显示 bridge_not_started。
 
-修复将轮询交给本模组创建的持久 MonoBehaviour.Update，确保在加载器完成登记后执行，并让 OnDestroy 调用幂等停止流程。修复包通过 Release 构建与原版扫描器，运行效果待替换并重启验证。
+修复将轮询交给本模组创建的持久 MonoBehaviour.Update，确保在加载器完成登记后执行，并让 OnDestroy 调用幂等停止流程。重启后已确认心跳、ready 状态和观察请求成功。
+
+后续已通过 begin_control、重复命令去重、过期 revision 拒绝、开店及第一位顾客到达观察。测试存档初始为第 1 天、450 信用点，第一位顾客为导师。实机回执位于 artifacts/live。
+
+导师开场后发现手动等待状态下接口漏列 dialogue_advance。修复移除了对 isConversationActiveFlag 大于零的依赖，并增加顾客到达期间的 busy 条件。该修复通过编译与扫描，待更新后重启验证。
