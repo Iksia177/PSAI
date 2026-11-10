@@ -8,7 +8,7 @@
 
 下一阶段源码已实现，新包已安装并核对哈希，等待重新载入后实机验收。
 
-2026-11-10 用户重新载入后说明日结报告正在遮挡界面。接口 ready=true、day=2、cash=450，但 screens 为空，确认报告漏读，当前安装版也缺少该面板的关闭动作。静态定位发现 StartOfDayUIManager.ShowMorningReport 已转而打开 AdvCalendarUIManager 的日结页。已补充 calendar_report 可见文字与按钮读取，以及调用原版 CloseUI 的 close_calendar_report 动作。修复通过零警告编译、75 方法扫描和 14 项客户端测试，待游戏退出后安装。本次尚未执行容器或水培操作。漏读回执为 artifacts/live/1794300150873-observe-84021289-cb5d-4c85-bebd-d282ba8dc2e2.json，会话 ad66a73fa4d74361809597adf199776e。
+2026-11-10 用户重新载入后说明日结报告正在遮挡界面。接口 ready=true、day=2、cash=450，但 screens 为空，确认报告漏读，当时安装版也缺少该面板的关闭动作。静态定位发现 StartOfDayUIManager.ShowMorningReport 已转而打开 AdvCalendarUIManager 的日结页。已补充 calendar_report 可见文字与按钮读取，以及调用原版 CloseUI 的 close_calendar_report 动作。修复通过零警告编译、75 方法扫描和 14 项客户端测试。用户退出后，已通过安装器的进程检查、原版扫描和文件哈希核对完成安装，等待重新载入验证。本次尚未执行容器或水培操作。漏读回执为 artifacts/live/1794300150873-observe-84021289-cb5d-4c85-bebd-d282ba8dc2e2.json，会话 ad66a73fa4d74361809597adf199776e。
 
 - 观察增加 panels，列出可交互物品窗口、展示柜及海报藏物处的名称、ID、开关状态、所属物品、操作可用性和当前可见库存。
 - 增加 open_panel / close_panel，使用原版物品内容窗口入口、关闭入口和海报交互。重复请求相同开关状态返回 invoked=false。展示柜为常驻区域，当前提供可见库存存取。
