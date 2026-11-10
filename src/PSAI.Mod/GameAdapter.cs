@@ -49,6 +49,12 @@ namespace PSAI
             var store = PlayerStore.Instance;
             var entry = EmporiumEntry.Instance;
             var dialogue = DialogUIManager.Instance;
+            var options = EmporiumOption.Instance;
+            if (options != null) snapshot["control_options"] = new JObject {
+                ["auto_next_dialogue"] = options.autoNextDialog,
+                ["auto_call_next"] = options.autoCallNext,
+                ["typewriter"] = options.enableTypewriterEffect
+            };
             snapshot["phase"] = store.storeState.ToString();
             snapshot["day"] = StoreStation.Instance.dayCounter;
             snapshot["cash"] = store.playerCash;
@@ -88,8 +94,7 @@ namespace PSAI
                 controlledOptions.enableTypewriterEffect = false;
             });
             if (controlledOptions != null) AddAction(available, "end_control", "Restore previous dialogue options", RestoreOptions);
-            var busy = store.lockShutterButtonFlag > 0 || store.isHandlingShootout || store.isClientBeingArrested ||
-                (store.currentClientInstance != null && !store.isClientArrived);
+            var busy = IsBusy(store);
             snapshot["busy"] = busy;
             if (!busy)
             {
@@ -111,7 +116,8 @@ namespace PSAI
                     AddAction(available, "dismiss_customer", "Dismiss the current customer", () => store.TryPlayerDismissCurrentClient(false));
                 if (store.currentClientInstance != null && NegociationUIManager.Instance != null)
                     AddAction(available, "open_trade", "Open the trade tablet", NegociationUIManager.Instance.OpenUI);
-                if (StoreShutterButton.Instance != null && ((int) store.storeState == 2 || ((int) store.storeState == 1 && store.CanEndDay())))
+                if (store.lockShutterButtonFlag == 0 && StoreShutterButton.Instance != null &&
+                    ((int) store.storeState == 2 || ((int) store.storeState == 1 && store.CanEndDay())))
                     AddAction(available, "shutter", "Use the shop shutter control", StoreShutterButton.Instance.OnClick);
                 var bed = UnityEngine.Object.FindObjectOfType<StoreBedroll>();
                 if (bed != null && (int) store.storeState == 0)
@@ -181,6 +187,23 @@ namespace PSAI
             return text.Substring(0, Math.Min(text.Length, Math.Max(0, field.maxVisibleCharacters)));
         }
 
+        private static bool IsBusy(PlayerStore store)
+        {
+            if (store.isHandlingShootout || store.isClientBeingArrested ||
+                (store.currentClientInstance != null && !store.isClientArrived)) return true;
+            var blackscreen = StoreUIManager.Instance.blackscreen;
+            if (blackscreen != null && blackscreen.isActiveAndEnabled && blackscreen.color.a > 0.001f) return true;
+            var shutter = StoreShutterButton.Instance;
+            if (shutter == null || shutter.shutterGameObject == null || shutter.blockerGameObject == null) return false;
+            // The shutter-button lock intentionally stays set throughout the night.
+            // Movement, rather than that button's availability, describes a transition.
+            var open = (int) store.storeState == 1;
+            var doorTarget = open ? shutter.endPosition : shutter.startPosition;
+            var blockerTarget = open ? shutter.blockerEndPosition : shutter.blockerStartPosition;
+            return shutter.shutterGameObject.transform.position != doorTarget ||
+                shutter.blockerGameObject.transform.localPosition != blockerTarget;
+        }
+
         internal JObject Inspect(JObject args)
         {
             var target = args.Value<string>("target") ?? "";
@@ -193,8 +216,12 @@ namespace PSAI
         internal JObject Execute(JObject args)
         {
             var action = args.Value<string>("action") ?? "";
-            if (PlayerStore.Instance.lockShutterButtonFlag > 0 || PlayerStore.Instance.isHandlingShootout || PlayerStore.Instance.isClientBeingArrested ||
-                (PlayerStore.Instance.currentClientInstance != null && !PlayerStore.Instance.isClientArrived))
+            if (action == "end_control")
+            {
+                RestoreOptions();
+                return new JObject { ["invoked"] = true };
+            }
+            if (IsBusy(PlayerStore.Instance))
                 throw new InvalidOperationException("game_busy");
             if (action == "move_item")
             {
