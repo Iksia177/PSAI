@@ -4,6 +4,22 @@
 
 ## 当前进展
 
+### 剧情收尾、常驻背包与原版外出限制回归通过
+
+本轮会话 7c2febd61cc8449a93b07c5df45a13e0，重载第 30 天副本，现金 2248，guidance.version=5，features 包含 scripted_dialogue。实机回执在 artifacts/live/v5-dialogue，summary.json 已根据全部前后回执断言通过。本轮没有新增源码修改。
+
+- 日报正常读取关闭，开店后通过 owned 与 tooltip 确认报纸自有，收回主库存。展示柜物品本轮完整保留，最终按名称与数量和基线逐项相同。
+- 对原版允许的普通顾客举枪并射击一次，重现治安部事件。busy=true 时 dialogue_state.waiting_for_click=true、can_interact=true，dialogue_advance 正常启用并执行。逐句读取到原版确认“你刚刚杀了一个大活人！”及涉嫌过失杀人调查提示，随后治安部离场，busy、resolving_shootout 与 shot_registered 均恢复 false，店铺操作重新可用。射击、原版确认死亡和剧情收尾完整通过，全程通过桥接推进。
+- 正常提前关店后，原版 visits_remaining 从营业期间的 0 变为 1，can_depart_now=true。原版店门直接进入选包。第一次取消选包后仍可正常出发，选择 30 格儿童背包。为合并本次验收，在店内先向空背包放入自有螺丝刀，关闭窗口后携带前往配给站，全程只完成一次地点出行。
+- 外出背包正常显示 presentation=embedded、open=true、can_open=false、can_close=false，afterhour_backpack_contents 能读到自有螺丝刀。将工具从包内移到地面，再从地面移回包内，两个动作均 moved=1，地面最终为空。未对外出背包执行手动开关。
+- 配给站 food_products 七条记录完整对应商品名、价格、库存及各自购买按钮，原版 can_buy 全为 false，余额仍为 6 票券。打开面板后的后续刷新观察中文字完整，本次以完整观察验收。遵守用户要求，没有点击购买或额外兑换。
+- 正常回店后，last_outing_day=30、already_went_out_tonight=true、visits_remaining=0、can_depart_now=false，原版门提示“已经太晚了，现在哪里都去不了了……”。出发动作不再列出，再次请求出发返回 action_not_available，重新观察确认次数和位置保持。
+- 回店后把后柜台自有背包收回库存，在店内正常打开检查，确认螺丝刀仍在包内且 owned=true，然后关闭窗口。柜台与交易台自有物品收尾通过，后柜台为空。
+
+最终为第 30 天 CLOSED、店内、2248 信用点、controlled=false、screens 为空，所有可关闭容器均已关闭。原控制选项已恢复，未打开夜间报告、未睡眠、未进入第 31 天，本轮没有图像请求。当前已验证的修复可以继续使用。
+
+后续按样本推进，剩余重点为票券足够时的配给站购买、NPC 证书购买与物品提交事件、工具取出卡住模组、通缉正例与举报、机器单选及滑块的实机操作，另含低优先级鉴定与教程专项。当前副本当夜外出次数已耗尽，重载回到当天起点，下一天推进仍需遵守用户当前约束。
+
 ### 第 5 版举枪实测与剧情对白修复，已安装待重载
 
 本次副本会话为 119048e0892343ab8ff19a41e3f3328d，第 30 天 MORNING、2248 信用点，外出记录 last_outing_day=29，早晨 visits_remaining=0。新 features 与 guidance.version=5 生效。日报读取并关闭，正常开店后用 owned 与 tooltip 确认柜台报纸属于自己，已移入库存。回执与汇总保存于 artifacts/live/v5，summary.json 根据实际前后状态断言。
