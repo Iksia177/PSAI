@@ -48,6 +48,8 @@ Node 测试使用项目 `.cache/tests/` 中的隔离目录和文件通信测试�
 
 ## 容器与机器扩展验收
 
+重新载入后的首项检查为日结报告。当前版本的 StartOfDayUIManager.ShowMorningReport 使用 AdvCalendarUIManager.OpenUIFromNightlyReport，旧 UIPanel 会漏读实际报告。新增 calendar_report 读取及 close_calendar_report 原版关闭动作后，需要先核对报告文字与当前日数，再关闭并确认对应 screen 消失，随后执行容器测试。2026-11-10 首次检查已证实旧接口漏读，修复后的读取与关闭仍待安装验证。
+
 源码编译、75 方法原版扫描及 14 项客户端测试已通过。容器与机器的真实行为须在安装新包后验证。
 
 ```powershell

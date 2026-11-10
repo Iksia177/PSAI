@@ -106,6 +106,10 @@ namespace PSAI
             AddScreen("bargain", BargainUIManager.Instance?.uiObject, screens, available);
             AddScreen("nightly_report", EndOfDayUIManager.Instance?.UI, screens, available);
             AddScreen("morning_report", StartOfDayUIManager.Instance?.UIPanel, screens, available);
+            var calendar = AdvCalendarUIManager.Instance;
+            AddScreen("calendar_report", calendar?.UIPanel, screens, available);
+            if (calendar != null && calendar.UIPanel != null && calendar.UIPanel.activeInHierarchy)
+                AddAction(available, "close_calendar_report", "Close the calendar and daily report", calendar.CloseUI);
             AddScreen("close_shop_confirmation", StoreUIManager.Instance.closeShutterConfirmationPanel, screens, available);
             snapshot["screens"] = screens;
 
