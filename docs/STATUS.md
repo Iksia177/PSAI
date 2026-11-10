@@ -4,6 +4,20 @@
 
 ## 当前进展
 
+### 第 5 版指导、原版店门条件与霰弹枪接口已安装
+
+用户退出后，本轮完成更新安装。默认指导为版本 5，加入优先保留展示柜商品用于陈列、每日读取并关闭报告、每次开店与夜间回店后把交易台及柜台的自有物品收回库存。物品列表与 tooltip 新增 owned，使用原版 GeneralHelper.IsItemEffectivelyOwned，与“未拥有”提示完全相同的判定。收纳由 agent 按指导执行。
+
+外出问题已找到原版入口差异。之前直接调用 MapUIManager.OpenGoOutsideConfirm，绕过 StoreDoor.OnClick 对 visitLeftTonight、伤势、封锁、休息、解锁及阶段的检查。用户在得知原版记录存在后明确要求沿用原版，因此最终版本撤下独立规则层。open_outside_confirmation 改为执行正常店门 OnClick，观察与执行前复核相同条件。根据柜台状态，原版入口可能直接打开选包或先显示警告，调用后以实际观察为准。
+
+outing 返回 visits_remaining、can_depart_now、原版门提示，以及 last_outing_day / already_went_out_tonight。出发可用性以原版剩余次数和条件为准，兼容游戏中的次数变化。地图、选包、确认或转场已在处理时，避免再次发起出门。不能将 IsShowingGoOutsideConfirm 当成窗口可见性判断，该原版方法实际检查后柜台是否有物品，已静态核对并使用真正面板状态。
+
+霰弹枪新增 firearm 观察与 raise_shotgun、lower_shotgun、shoot_customer。举枪复用 Shotgun.OnClick 与 CanPickup，放下复用正常 ExitShootingMode，射击通过原版 CanShoot 与 Shoot。firearm.target 是随当前顾客对象变化的会话内 ID，射击必须明确携带该目标，执行前重新核对，沿用会话、revision 和命令去重。观察返回 raised、可用条件、shot_registered、后续枪战状态及正常确认界面。shoot 返回并不直接等于已击杀，需要核对原版结果，特殊顾客可有存活分支。当前尚未实机执行举枪或射击。
+
+本包同时包含前轮常驻背包内部库存和配给站 food_products 修复。编译零警告零错误，49 项元数据检查通过，原版扫描 164 个方法且无额外权限，TypeScript 检查与构建及 14 项客户端测试通过。已退出后安装并核对 SHA256，PSAI.Mod.dll 为 A1D481C3E6E272B6A67F9C2EB7BEECC93DD284C9922DAE46744C3A8CC5121163，位置为 G:\SteamLibrary\steamapps\common\Probably Stolen\Mods\psai。当前工作仅保存于本地 Git。
+
+下一次请用户载入第 30 天测试副本，确认 guidance.version=5 和 features 含 outing_state、firearm_actions、visible_ownership。先记录原版剩余外出次数与 owned 字段，检查日报、开店后的自有物品收尾。优先验证常驻背包内部可见、物品从地面移入包内并正常带回、原版次数耗尽后不能再次出发。配给站实际购买仍等待票券充足的条件。用户已授权下一轮在测试副本验证举枪、放下及击杀普通可射击顾客，保留前后状态与后续原版事件。继续遵守“不睡觉进入下一天”，需要测试其他地点时另行重载，遇到安装或人工门槛保存并结束当轮。
+
 ### 第 4 版实测通过主要交易与三个外出地点，常驻背包修复待安装
 
 会话 d3dd88d8c9cd4c618fe37e0baab87da9 从同一槽位 4 的第 30 天 MORNING 开始，2248 信用点。guidance.version=4 与新 features 生效，租金为 219、5 天后到期、欠租 0、未购得产权。原购买操作日志仍存在，而现金及库存恢复到当天起点，证实日志需要与当前存档状态复核。完整前后快照与回执在 artifacts/live/v4，summary.json 已通过实际回执断言。

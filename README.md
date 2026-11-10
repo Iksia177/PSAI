@@ -2,7 +2,7 @@
 
 Probably Stolen Agent Interface，为 Steam 版《深空当铺：可能是偷的》提供 agent 游玩接口。
 
-当前为实验性 v0.1，基础营业、容器、日结报告、水培生产，以及第 30 天的电话、加点支付和真实材料升级已通过实机测试。第 4 版指导、响应选择窗口与名片修复、通用操作发现及控件扩展已完成离线检查，等待安装重载验收。完整进度见 `docs/STATUS.md`。
+当前为实验性 v0.1，基础营业、容器、日结、水培、电话、加点、材料升级、液体加工与中期交易已有实机结果。第 5 版增加原版店门条件与外出次数、所有权字段与霰弹枪动作。常驻背包内部读取和配给站商品按钮关联已修复，等待重载验收。完整进度见 `docs/STATUS.md`。
 
 ## 已确认的方向
 
@@ -67,7 +67,9 @@ node src/client/cli.ts act '{"action":"open_panel","target":"<panel_id>"}' --rev
 
 ## 跨会话游玩偏好
 
-CLI 和 MCP 的 `status`、`observe` 返回 `guidance`，包含偏好版本和按 priority 从小到大排列的建议。第 4 版增加周期交租与取得产权的长期目标、通用操作发现、晨间机器整理、每晚优先考虑外出、最大总容量背包和名片读取后关闭。原有收纳、机器运行、按需用电和约每 4 天检查加点等建议继续提供。具体加工与经营流程由模型判断，用户当前指令优先。
+CLI 和 MCP 的 `status`、`observe` 返回 `guidance`，包含偏好版本和按 priority 从小到大排列的建议。第 5 版增加优先保留展示柜物品、每日读取日报、开店和夜间回店后收回柜台自有物品。周期交租、产权目标、晨间机器整理和其他建议继续提供，具体加工与经营流程由模型判断。
+
+外出使用原版店门 OnClick 入口及其条件。outing.visits_remaining 返回原版当晚剩余次数，can_depart_now 与门的提示说明当前是否可以出发，实际调用前再次检查。原版的次数、伤势、封锁、休息及解锁条件生效，次数变化随原版状态读取。
 
 默认偏好随接口代码分发。需要覆盖时，将示例复制为本机文件，并向 CLI 或 MCP 进程传入环境变量。覆盖文件提供完整规则列表，删除某条规则即可去掉相应偏好。
 
@@ -80,6 +82,10 @@ node src/client/cli.ts status
 MCP harness 使用同名环境变量设置绝对路径。配置错误时返回默认偏好，并在 guidance.error 标记 preferences_invalid_or_unreadable。本机覆盖文件已被 Git 忽略。
 
 ## 中期交互
+
+outing 同时返回原版 lastAfterhourOutingDay，与当前游戏日比较判断当晚是否已外出，重载后重新读取。出发是否可用以原版 visitLeftTonight 及店门条件为准。物品列表和 tooltip 的 owned 使用原版“未拥有”提示的同一判定，供 agent 收回交易台与柜台自有物品。
+
+firearm 返回当前顾客的会话内 target、举枪状态、可用条件、射击登记和后续枪战状态。动作 raise_shotgun、lower_shotgun、shoot_customer 复用原版入口，shoot_customer 必须携带本次观察的 firearm.target，执行前核对目标与射击条件。completed 仅表示原版处理函数返回，实际击杀、存活和后续事件须继续观察。举枪与击杀专项等待测试副本实测。
 
 `inspect operations` 查询当前物品对其他已可见物品的合法作用目标，配合 tooltip 与 use_conditions 自行发现加工、升级和工具用途。capacity 返回原版背包格形的 total_cells、width、height，总容量不含嵌套容器。liquid 返回原版当前条件下的液量与品质说明。机器面板除按钮、标签页与槽位外，增加单选控件和滑块，动作参数按 controls 中的 parameters 提供 value 或 low/high。滑块使用原版步进和变化、释放回调，实机样本待验证。
 

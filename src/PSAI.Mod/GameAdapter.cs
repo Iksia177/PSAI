@@ -153,9 +153,9 @@ namespace PSAI
                 }
                 if ((int) store.storeState == 1 && store.CanNextClient())
                     AddAction(available, "call_next", "Call the next customer", store.TryCallNextClient);
-                if (store.currentClientInstance != null && store.CanDismissCurrentClient())
+                if (!StoreUIManager.Instance.isShootingMode && store.currentClientInstance != null && store.CanDismissCurrentClient())
                     AddAction(available, "dismiss_customer", "Dismiss the current customer", () => store.TryPlayerDismissCurrentClient(false));
-                if (store.currentClientInstance != null && NegociationUIManager.Instance != null)
+                if (!StoreUIManager.Instance.isShootingMode && store.currentClientInstance != null && NegociationUIManager.Instance != null)
                     AddAction(available, "open_trade", "Open the trade tablet", NegociationUIManager.Instance.OpenUI);
                 if (store.lockShutterButtonFlag == 0 && StoreShutterButton.Instance != null &&
                     ((int) store.storeState == 2 || ((int) store.storeState == 1 && store.CanEndDay())))
@@ -210,7 +210,8 @@ namespace PSAI
             foreach (var item in inventory.childItems.ToArray())
             {
                 var itemId = RegisterItem(item);
-                contents.Add(new JObject { ["id"] = itemId, ["name"] = item.GetDisplayName(true), ["count"] = item.unitCount });
+                contents.Add(new JObject { ["id"] = itemId, ["name"] = item.GetDisplayName(true), ["count"] = item.unitCount,
+                    ["owned"] = GeneralHelper.IsItemEffectivelyOwned(item) });
                 AddItemPanel(item, result);
             }
         }

@@ -1,5 +1,5 @@
 {
-  "version": "local-4",
+  "version": "local-5",
   "rules": [
     {
       "id": "read-effects",
@@ -14,7 +14,7 @@
     {
       "id": "showcase-purpose",
       "priority": 2,
-      "instruction": "展示柜具有影响客户群体等经营功能，陈列前先读取客户群体与效果，再结合经营目的决定物品。普通收纳优先选择用途合适的储物容器，空间不足时保留在主库存。"
+      "instruction": "展示柜具有影响客户群体等经营功能，优先保留其中物品用于陈列，交易先使用库存及其他自有储备。需要调整陈列时先读取客户群体与效果，再结合经营目的决定。普通收纳优先选择用途合适的储物容器。"
     },
     {
       "id": "rent-and-property",
@@ -30,6 +30,16 @@
       "id": "morning-machines",
       "priority": 5,
       "instruction": "起床后优先检查机器，收集并处理产物，补充合适投入物。结合可见电量、兼容性、运行状态和剩余资源，优先换上电量更多的适用电池，保留必要供电。"
+    },
+    {
+      "id": "read-daily-report",
+      "priority": 6,
+      "instruction": "每日先读取日报的夜间结果、事件线索、服务和状态信息，结合当前任务安排操作，读取完成后关闭报告。"
+    },
+    {
+      "id": "counter-cleanup",
+      "priority": 7,
+      "instruction": "每次开店后和夜间回店后，优先检查交易台与柜台，把确认属于自己且无“未拥有”标识的物品收回主库存。先读 tooltip 或所有权字段，避免移走顾客物品。空间不足时按容器用途暂存，正在处理的交易或任务物品按当前目标安排。"
     },
     {
       "id": "file-documents",
@@ -59,7 +69,7 @@
     {
       "id": "night-outing",
       "priority": 45,
-      "instruction": "每晚在条件允许时优先考虑出门，结合当前目标、租金储备、时间和可见风险选择活动。外出选包优先选择当前允许携带、绝对总容量最大的背包，比较 capacity.total_cells，不以剩余空间代替总容量，同容量沿用列表顺序。"
+      "instruction": "按原版 outing.visits_remaining、can_depart_now 与门的提示判断外出机会，条件允许时每晚优先考虑出门，结合当前目标、租金储备、时间和可见风险选择活动。外出选包优先选择当前允许携带、绝对总容量最大的背包，比较 capacity.total_cells，不以剩余空间代替总容量，同容量沿用列表顺序。"
     },
     {
       "id": "upgrade-review",

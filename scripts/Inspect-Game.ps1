@@ -47,7 +47,15 @@ try {
         @('StoreClient', 'SetWanted', 3),
         @('MachinerySlider', 'SetValue', 2),
         @('MachineryRangeSlider', 'SetValues', 3),
-        @('WaterHelper', 'TransferLiquid', 2)
+        @('WaterHelper', 'TransferLiquid', 2),
+        @('Shotgun', 'CanPickup', 0),
+        @('Shotgun', 'OnClick', 0),
+        @('StoreUIManager', 'CanShoot', 0),
+        @('StoreUIManager', 'Shoot', 0),
+        @('StoreUIManager', 'ExitShootingMode', 0),
+        @('GeneralHelper', 'IsItemEffectivelyOwned', 1),
+        @('StoreDoor', 'OnClick', 0),
+        @('StoreDoor', 'GetTooltip', 0)
     )
     $checks = @($required | ForEach-Object {
         $typeName, $methodName, $parameterCount = $_

@@ -16,7 +16,7 @@ namespace PSAI
         private readonly Dictionary<string, Func<Rect>> imageTargets = new Dictionary<string, Func<Rect>>();
         private readonly Dictionary<string, object> imageContexts = new Dictionary<string, object>();
 
-        private void ClearMidgame() { ClearMidgameViews(); GameImages.Reset(); }
+        private void ClearMidgame() { ClearMidgameViews(); ClearFirearm(); GameImages.Reset(); }
         private void ClearMidgameViews() { parameterActions.Clear(); visibleTooltips.Clear(); imageTargets.Clear(); imageContexts.Clear(); }
 
         private void CaptureMidgame(JObject snapshot, JArray screens, JArray available, JArray stock)
@@ -168,8 +168,12 @@ namespace PSAI
                 }
             }
             snapshot["destinations"] = destinations;
-            if ((int) store.storeState == 0 && !map.IsInTransit && !map.IsOutside)
-                AddAction(available, "open_outside_confirmation", "Open the normal night outing confirmation", map.OpenGoOutsideConfirm);
+            var door = UnityEngine.Object.FindObjectOfType<StoreDoor>();
+            if (CanStartOuting(door))
+                AddAction(available, "open_outside_confirmation", "Use the original door to begin an outing", () => {
+                    if (!CanStartOuting(door)) throw new InvalidOperationException("outing_not_available");
+                    door!.OnClick();
+                });
             // Some built-in locations use legacy panels instead of PanelObject.
             AddScreen("scavenging", map.UIScavengingPanel, screens, available);
             AddScreen("technology_shop", map.UIUpgradeMerchantPanel, screens, available);
@@ -270,6 +274,7 @@ namespace PSAI
                 if (target == "display_case") throw new InvalidOperationException("open_clientele_required");
                 if (!items.TryGetValue(target, out var item) || !(item is GameItemElement element)) throw new InvalidOperationException("item_not_visible");
                 return new JObject { ["id"] = target, ["text"] = element.GetTooltip().nakedText,
+                    ["owned"] = GeneralHelper.IsItemEffectivelyOwned(item),
                     ["can_remove"] = item.MayRemove(), ["can_activate"] = item.MayActivateSlotItem() && item.CanActivateSlotItem(),
                     ["can_toggle"] = item.MayToggleSlotItem() && item.CanToggleSlotItem() };
             }

@@ -10,6 +10,15 @@ namespace PSAI
         private void CaptureInteractions(JObject snapshot, JArray screens, JArray available)
         {
             var store = PlayerStore.Instance;
+            var door = UnityEngine.Object.FindObjectOfType<StoreDoor>();
+            snapshot["outing"] = new JObject {
+                ["day"] = StoreStation.Instance.dayCounter, ["last_outing_day"] = store.lastAfterhourOutingDay,
+                ["already_went_out_tonight"] = store.lastAfterhourOutingDay == StoreStation.Instance.dayCounter,
+                ["visits_remaining"] = store.visitLeftTonight, ["can_depart_now"] = CanStartOuting(door),
+                ["prompt"] = door == null ? null : door.GetTooltip(),
+                ["source"] = "original_outing_state_and_door_conditions"
+            };
+            CaptureFirearm(snapshot, screens, available);
             snapshot["obligations"] = new JObject {
                 ["rent_due_in_days"] = store.dayUntilRent, ["rent_amount"] = store.GetRentValue(),
                 ["rent_arrears"] = store.temporaryRent, ["can_pay_rent"] = store.CanPayRent(),
@@ -161,6 +170,20 @@ namespace PSAI
             var cells = InventoryCapacity.CountUsableCells(shape.width, shape.height, shape.GetLocal);
             return new JObject { ["total_cells"] = cells, ["width"] = shape.width, ["height"] = shape.height,
                 ["source"] = "original_inventory_shape", ["includes_nested_containers"] = false };
+        }
+
+        private static bool CanStartOuting(StoreDoor? door)
+        {
+            var store = PlayerStore.Instance;
+            var map = MapUIManager.Instance;
+            var entry = EmporiumEntry.Instance;
+            if (door == null || !door.isActiveAndEnabled || map == null || map.IsOutside || map.IsInTransit ||
+                TransitUI.IsOpen || (map.confirmationPanel != null && map.confirmationPanel.activeInHierarchy) ||
+                (int) store.storeState != 0 || (entry.responseWindow?.IsVisible() ?? false) ||
+                (entry.responseWindowClosable?.IsVisible() ?? false)) return false;
+            return store.devMode || (!HealthData.IsSeriouslyWounded() &&
+                !StoreStation.Instance.storeEventManager.IsEventActive("crackdown") &&
+                !StartingPerkContent.IsAgoraphobiaResting() && store.isAfterhoursIntroduced && store.visitLeftTonight > 0);
         }
 
         private void AddMountedBackpack(GameItem item, JArray stock)
