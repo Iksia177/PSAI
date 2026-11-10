@@ -12,6 +12,7 @@
     "check": "tsc --noEmit",
     "test": "node --test tests/*.test.ts",
     "test:live": "node tests/live-day.ts",
+    "test:panels": "node tests/live-panels.ts",
     "cli": "node src/client/cli.ts",
     "mcp": "node src/client/mcp.ts"
   },

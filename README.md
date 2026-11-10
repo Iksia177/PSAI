@@ -56,7 +56,28 @@ node src/client/cli.ts result <command_id> --session <session_id>
 
 MCP stdio 启动命令为 `node D:/CodexWork/PSAI/src/client/mcp.ts`。在支持 MCP 的 harness 中将它配置为本地 stdio 服务，可选设置 `PSAI_DATA_DIR`。工具为 `psai_status`、`psai_observe`、`psai_inspect`、`psai_actions`、`psai_act`、`psai_result`。`psai_act` 明确要求观察中的 `session_id` 和 `expected_revision`。
 
-`act` 返回 completed 表示正常操作处理函数已返回，随后应重新观察动画和后续面板。超时使用原命令 ID 查询，重试复用同一 ID 和完全相同参数。uncertain 表示需要重新观察后判断实际结果。当前 `inspect` 支持可见物品说明，鉴定细节与局部图像仍待扩展。
+`act` 返回 completed 表示正常操作处理函数已返回，随后应重新观察动画和后续面板。超时使用原命令 ID 查询，重试复用同一 ID 和完全相同参数。uncertain 表示需要重新观察后判断实际结果。
+
+容器扩展包已实现 `panels` 观察字段、`open_panel` / `close_panel` 动作和 `contents` / `machine` 查询，本机已安装，实机验收待重新载入后完成。`target` 取自最新观察的面板 ID，`move_item` 的 `destination` 取自已打开窗口中的库存 ID。固定展示柜为常驻区域，文档柜和垃圾桶的内部库存通过其物品窗口显示。机器面板按可见槽位返回库存及槽位标签，标签页仅读取当前选中页。鉴定细节与局部图像仍待扩展。
+
+```powershell
+node src/client/cli.ts inspect '{"target":"<panel_id>","detail":"contents"}'
+node src/client/cli.ts act '{"action":"open_panel","target":"<panel_id>"}' --revision <revision> --session <session_id>
+```
+
+## 跨会话游玩偏好
+
+CLI 和 MCP 的 `status`、`observe` 返回 `guidance`，包含偏好版本和按 priority 从小到大排列的建议。默认优先整理闲置自有文件、收纳闲置物品，并根据实际运行及供电需求判断夜间用电。用户当前指令优先，agent 结合交易、展示和生产用途决定具体动作。
+
+默认偏好随接口代码分发。需要覆盖时，将示例复制为本机文件，并向 CLI 或 MCP 进程传入环境变量。覆盖文件提供完整规则列表，删除某条规则即可去掉相应偏好。
+
+```powershell
+Copy-Item psai.preferences.example.json psai.preferences.local.json
+$env:PSAI_PREFERENCES_FILE = (Resolve-Path psai.preferences.local.json).Path
+node src/client/cli.ts status
+```
+
+MCP harness 使用同名环境变量设置绝对路径。配置错误时返回默认偏好，并在 guidance.error 标记 preferences_invalid_or_unreadable。本机覆盖文件已被 Git 忽略。
 
 ## 项目文档
 

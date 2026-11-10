@@ -5,6 +5,7 @@ artifacts/
 node_modules/
 dist/
 psai.local.json
+psai.preferences.local.json
 .env
 .env.*
 !.env.example

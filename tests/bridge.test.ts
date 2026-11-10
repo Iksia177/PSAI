@@ -6,6 +6,7 @@ import { execFile, spawn } from 'node:child_process';
 import { promisify } from 'node:util';
 import { setTimeout as delay } from 'node:timers/promises';
 import { BridgeClient, type Request } from '../src/client/bridge.ts';
+import { loadGuidance } from '../src/client/guidance.ts';
 
 async function fixture() {
   const root = resolve('.cache/tests');
@@ -129,14 +130,22 @@ test('CLI executes through its public entry point and emits JSON', async () => {
   const { directory } = await fixture();
   const game = peer(directory);
   try {
-    const { stdout } = await promisify(execFile)(process.execPath, ['src/client/cli.ts', 'observe', '--data-dir', directory]);
+    const preferences = resolve('psai.preferences.example.json');
+    const { stdout } = await promisify(execFile)(process.execPath, ['src/client/cli.ts', 'observe', '--data-dir', directory],
+      { env: { ...process.env, PSAI_PREFERENCES_FILE: preferences } });
     assert.equal(JSON.parse(stdout).status, 'completed');
+    assert.equal(JSON.parse(stdout).guidance.mode, 'advisory');
+    assert.deepEqual(JSON.parse(stdout).guidance, await loadGuidance(preferences));
   } finally { await game.stop(); }
 });
 
 test('MCP stdio initializes, lists all six tools and calls bridge status', async () => {
   const { directory } = await fixture();
-  const child = spawn(process.execPath, ['src/client/mcp.ts'], { env: { ...process.env, PSAI_DATA_DIR: directory }, stdio: ['pipe', 'pipe', 'pipe'] });
+  const game = peer(directory);
+  const preferences = resolve('psai.preferences.example.json');
+  const child = spawn(process.execPath, ['src/client/mcp.ts'], {
+    env: { ...process.env, PSAI_DATA_DIR: directory, PSAI_PREFERENCES_FILE: preferences }, stdio: ['pipe', 'pipe', 'pipe'],
+  });
   let buffer = '';
   let stderr = '';
   const messages = new Map<number, unknown>();
@@ -156,11 +165,13 @@ test('MCP stdio initializes, lists all six tools and calls bridge status', async
       if (Date.now() > deadline || child.exitCode !== null) throw new Error('MCP response missing ' + stderr);
       await delay(10);
     }
-    return messages.get(id) as { result: { tools?: { name: string }[]; content?: { text: string }[] }; error?: unknown };
+    return messages.get(id) as { result: { instructions?: string; tools?: { name: string }[]; content?: { text: string }[] }; error?: unknown };
   };
   try {
     send({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'psai-tests', version: '0.1.0' } } });
-    assert.equal((await wait(1)).error, undefined);
+    const initialized = await wait(1);
+    assert.equal(initialized.error, undefined);
+    assert.match(initialized.result.instructions!, /guidance/);
     send({ jsonrpc: '2.0', method: 'notifications/initialized' });
     send({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
     const tools = (await wait(2)).result.tools!;
@@ -168,5 +179,13 @@ test('MCP stdio initializes, lists all six tools and calls bridge status', async
     send({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'psai_status', arguments: {} } });
     const response = await wait(3);
     assert.equal(JSON.parse(response.result.content![0]!.text).session_id, 'session-a');
-  } finally { child.stdin.end(); child.kill(); }
+    assert.equal(JSON.parse(response.result.content![0]!.text).guidance.mode, 'advisory');
+    assert.deepEqual(JSON.parse(response.result.content![0]!.text).guidance, await loadGuidance(preferences));
+    send({ jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'psai_act', arguments: {
+      action: 'open_panel', target: 'poster_stash', expected_revision: 1, session_id: 'session-a',
+    } } });
+    const action = JSON.parse((await wait(4)).result.content![0]!.text);
+    assert.equal(action.status, 'completed');
+    assert.deepEqual(action.data.received, { action: 'open_panel', target: 'poster_stash' });
+  } finally { child.stdin.end(); child.kill(); await game.stop(); }
 });

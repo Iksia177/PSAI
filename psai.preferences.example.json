@@ -1,0 +1,8 @@
+{
+  "version": "local-1",
+  "rules": [
+    { "id": "file-documents", "priority": 10, "instruction": "优先将闲置自有文件放入文档柜。" },
+    { "id": "store-idle-items", "priority": 20, "instruction": "优先将闲置自有物品收入储物柜，为交易、展示和生产保留所需物品。" },
+    { "id": "night-electricity", "priority": 30, "instruction": "依据计划运行的设备和可见供电条件判断是否订购夜间电力。" }
+  ]
+}

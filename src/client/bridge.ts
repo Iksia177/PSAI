@@ -3,6 +3,7 @@ import { readFile, writeFile, access, mkdir, rename, unlink } from 'node:fs/prom
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
+import { loadGuidance } from './guidance.ts';
 
 export interface BridgeStatus {
   protocol_version: '0.1';
@@ -82,7 +83,7 @@ export class BridgeClient {
     safeId(status.session_id);
     const age = Date.now() - Date.parse(status.updated_at);
     if (!Number.isFinite(age) || age > 15000 || age < -15000 || status.online !== true) throw new Error('bridge_offline');
-    return status;
+    return { ...status, guidance: await loadGuidance() };
   }
 
   async result(id: string, session?: string): Promise<Receipt> {
@@ -149,7 +150,10 @@ export class BridgeClient {
         await readFile(receiptPath);
         const result = await this.result(request.command_id, request.session_id);
         if (result.request && canonical(result.request) !== canonical(request)) throw new Error('command_id_conflict');
-        if (result.status !== 'pending') return result;
+        if (result.status !== 'pending') {
+          if (tool === 'observe' && result.status === 'completed') return { ...result, guidance: status.guidance };
+          return result;
+        }
       } catch (error) {
         if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
       }
