@@ -26,7 +26,7 @@ Node 测试使用项目 `.cache/tests/` 中的隔离目录和文件通信测试�
 
 ## 实机验收顺序
 
-- 检查 `status.json` 持续更新、协议版本、当前会话和 ready 状态，以及 Player.log 中的 PSAI 记录。
+- 检查 `status.json` 持续更新、协议版本、当前会话和 ready 状态，以及 Player.log 中的 `PSAI heartbeat active.` 记录。
 - 连续观察两次，核对相同游戏状态的 revision 稳定。进入新存档或返回主菜单时检查 session 切换。
 - 调用 begin_control，确认手动对话和叫号生效。检查可见对话、选择、物品名称、数量和当前面板文字。
 - 执行一条对话或叫号动作，重新观察。重复同一命令 ID，确认只执行一次，错误版本与会话应被拒绝。
@@ -45,3 +45,9 @@ Node 测试使用项目 `.cache/tests/` 中的隔离目录和文件通信测试�
 ## 证据记录
 
 记录游戏版本和构建、Git 提交、启用模组、测试存档、命令 ID、会话 ID、执行前后快照，以及通过或失败原因。本机运行证据保存到被忽略的 artifacts 目录，文档仅汇总可分享的结果。
+
+## 首次加载发现的问题
+
+2026-11-10 的日志确认 PSAI 已加载。初版在 IMod.OnEnable 中调用 ModHelper.StartCoroutine，当时加载器尚未将模组登记为运行中，该方法直接返回 null。心跳从未启动，因此客户端显示 bridge_not_started。
+
+修复将轮询交给本模组创建的持久 MonoBehaviour.Update，确保在加载器完成登记后执行，并让 OnDestroy 调用幂等停止流程。修复包通过 Release 构建与原版扫描器，运行效果待替换并重启验证。

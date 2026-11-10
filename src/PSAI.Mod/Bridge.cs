@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -22,30 +21,34 @@ namespace PSAI
         private float nextPoll;
         private bool stopped;
         private string? lastError;
+        private bool heartbeatLogged;
 
         internal Bridge(ModLog log) { this.log = log; }
 
-        internal IEnumerator Run()
+        internal void Poll()
         {
-            while (!stopped)
+            if (stopped || Time.realtimeSinceStartup < nextPoll) return;
+            nextPoll = Time.realtimeSinceStartup + 0.1f;
+            try
             {
-                if (Time.realtimeSinceStartup >= nextPoll)
+                Tick();
+                if (!heartbeatLogged)
                 {
-                    nextPoll = Time.realtimeSinceStartup + 0.1f;
-                    try { Tick(); }
-                    catch (Exception error)
-                    {
-                        lastError = error.Message;
-                        log.Error("Bridge tick failed: " + error.Message);
-                        nextPoll = Time.realtimeSinceStartup + 2f;
-                    }
+                    log.Log("PSAI heartbeat active.");
+                    heartbeatLogged = true;
                 }
-                yield return null;
+            }
+            catch (Exception error)
+            {
+                lastError = error.Message;
+                log.Error("Bridge tick failed: " + error.Message);
+                nextPoll = Time.realtimeSinceStartup + 2f;
             }
         }
 
         internal void Stop()
         {
+            if (stopped) return;
             stopped = true;
             game.RestoreOptions();
             Write("status.json", Status(false));
