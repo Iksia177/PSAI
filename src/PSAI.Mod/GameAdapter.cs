@@ -298,6 +298,33 @@ namespace PSAI
                 }
                 CaptureElement(tabs.GetPage(tabs.selected), panel, path + "-tab-" + tabs.selected, tabs.GetCaption(tabs.selected), stock, visited);
             }
+            else if (element is MachineryRadioButton radio && !radio.isHidden)
+            {
+                AddPanelControl(panel, "radio-" + panel.Id + path, radio.text,
+                    !radio.isDisabled && !radio.requiresHold, () => {
+                        if (radio.isDisabled || radio.isHidden || radio.requiresHold) throw new InvalidOperationException("control_not_available");
+                        radio.Select();
+                    });
+                ((JArray) panel.View["controls"]!).Last!["selected"] = radio.isOn;
+            }
+            else if (element is MachinerySlider slider)
+                AddValueControl(panel, "slider-" + panel.Id + path, slider.description, !slider.isDisabled,
+                    new JObject { ["min"] = slider.min, ["max"] = slider.max, ["step"] = slider.step, ["value"] = slider.value }, args => {
+                        if (slider.isDisabled) throw new InvalidOperationException("control_not_available");
+                        var value = ReadControlValue(args, "value", slider.min, slider.max);
+                        slider.SetValue(value, true);
+                        slider.onReleased?.Invoke(slider.value);
+                    });
+            else if (element is MachineryRangeSlider range)
+                AddValueControl(panel, "range-" + panel.Id + path, range.description, !range.isDisabled,
+                    new JObject { ["min"] = range.min, ["max"] = range.max, ["step"] = range.step, ["low"] = range.low, ["high"] = range.high }, args => {
+                        if (range.isDisabled) throw new InvalidOperationException("control_not_available");
+                        var low = ReadControlValue(args, "low", range.min, range.max);
+                        var high = ReadControlValue(args, "high", range.min, range.max);
+                        if (low > high) throw new InvalidOperationException("invalid_control_range");
+                        range.SetValues(low, high, true);
+                        range.onReleased?.Invoke(range.low, range.high);
+                    });
             else if (element is MachineryButton button && !button.isHidden)
                 AddPanelControl(panel, "control-" + panel.Id + path, button.hasText ? button.text : button.description,
                     !button.isDisabled && !button.requiresHold, () => {
@@ -322,14 +349,19 @@ namespace PSAI
             screens.Add(new JObject {
                 ["id"] = id,
                 ["text"] = new JArray(root.GetComponentsInChildren<TextMeshProUGUI>(false)
-                    .Select(Text).Where(text => text.Length > 0).Distinct())
+                    .Select(Text).Concat(root.GetComponentsInChildren<UnityEngine.UI.Text>(false)
+                        .Where(field => field.isActiveAndEnabled).Select(field => field.text))
+                    .Where(text => text.Length > 0).Distinct())
             });
             foreach (var button in root.GetComponentsInChildren<Button>(false))
             {
                 if (!button.isActiveAndEnabled) continue;
                 var target = "button-" + button.GetInstanceID();
                 if (available.OfType<JObject>().Any(option => option.Value<string>("action") == target)) continue;
-                var label = string.Join(" ", button.GetComponentsInChildren<TextMeshProUGUI>(false).Select(Text).Where(text => text.Length > 0));
+                var label = string.Join(" ", button.GetComponentsInChildren<TextMeshProUGUI>(false).Select(Text)
+                    .Concat(button.GetComponentsInChildren<UnityEngine.UI.Text>(false)
+                        .Where(field => field.isActiveAndEnabled).Select(field => field.text))
+                    .Where(text => text.Length > 0).Distinct());
                 if (label.Length == 0) label = button.gameObject.name;
                 if (!button.IsInteractable())
                 {

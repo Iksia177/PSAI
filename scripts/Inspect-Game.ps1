@@ -38,7 +38,16 @@ try {
         @('WildNetworkUI', 'get_IsOpen', 0),
         @('MapUIManager', 'Travel', 1),
         @('AfterhourLocation', 'GetDiscovered', 0),
-        @('StoreSecButton', 'GetTooltip', 0)
+        @('StoreSecButton', 'GetTooltip', 0),
+        @('EmporiumEntry', 'ShowResponseWindow', 1),
+        @('EmporiumEntry', 'GetAllOwnedItemsByTag', 1),
+        @('PixelWindow', 'IsVisible', 0),
+        @('PaperUIManager', 'CloseBrewerCard', 0),
+        @('PlayerStore', 'GetRentValue', 0),
+        @('StoreClient', 'SetWanted', 3),
+        @('MachinerySlider', 'SetValue', 2),
+        @('MachineryRangeSlider', 'SetValues', 3),
+        @('WaterHelper', 'TransferLiquid', 2)
     )
     $checks = @($required | ForEach-Object {
         $typeName, $methodName, $parameterCount = $_

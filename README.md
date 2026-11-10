@@ -2,13 +2,13 @@
 
 Probably Stolen Agent Interface，为 Steam 版《深空当铺：可能是偷的》提供 agent 游玩接口。
 
-当前为实验性 v0.1，基础营业、容器、日结报告及水培生产已通过实机测试。中期扩展已增加原版悬浮说明、电话、加点支付校验、夜间外出、材料作用于目标、通缉图像与第 3 版指导，待中期存档副本实机验收。完整进度见 `docs/STATUS.md`。
+当前为实验性 v0.1，基础营业、容器、日结报告、水培生产，以及第 30 天的电话、加点支付和真实材料升级已通过实机测试。第 4 版指导、响应选择窗口与名片修复、通用操作发现及控件扩展已完成离线检查，等待安装重载验收。完整进度见 `docs/STATUS.md`。
 
 ## 已确认的方向
 
 - 原生 C# 模组负责读取状态和执行正常游戏动作，外部 TypeScript CLI 与 MCP 适配器共用协议。
 - 模组通过官方自有数据目录 API 交换 JSON，在 Unity 主线程处理游戏对象。
-- 以玩家可见信息为边界，优先按需查询具体细节，图像作为复杂视觉特征的补充。
+- 优先读取结构化接口与文字，图像按需查询。当前顾客的独立内部通缉身份字段已获用户授权读取，观察结果标记来源。
 - 首版验收完成一个正常营业日，涵盖顾客、对话、库存、议价、交易与日结。
 
 ## 本机开发
@@ -67,7 +67,7 @@ node src/client/cli.ts act '{"action":"open_panel","target":"<panel_id>"}' --rev
 
 ## 跨会话游玩偏好
 
-CLI 和 MCP 的 `status`、`observe` 返回 `guidance`，包含偏好版本和按 priority 从小到大排列的建议。第 3 版增加操作前读取标签与效果、当前容器窗口用后关闭、按展示柜经营效果选择陈列、约每 4 天检查加点并平衡主动与被动项目，以及条件满足时优先接受 NPC 事件。原有收纳、机器运行和按需用电建议继续提供，机器投入物由模型判断。用户当前指令优先。
+CLI 和 MCP 的 `status`、`observe` 返回 `guidance`，包含偏好版本和按 priority 从小到大排列的建议。第 4 版增加周期交租与取得产权的长期目标、通用操作发现、晨间机器整理、每晚优先考虑外出、最大总容量背包和名片读取后关闭。原有收纳、机器运行、按需用电和约每 4 天检查加点等建议继续提供。具体加工与经营流程由模型判断，用户当前指令优先。
 
 默认偏好随接口代码分发。需要覆盖时，将示例复制为本机文件，并向 CLI 或 MCP 进程传入环境变量。覆盖文件提供完整规则列表，删除某条规则即可去掉相应偏好。
 
@@ -80,6 +80,12 @@ node src/client/cli.ts status
 MCP harness 使用同名环境变量设置绝对路径。配置错误时返回默认偏好，并在 guidance.error 标记 preferences_invalid_or_unreadable。本机覆盖文件已被 Git 忽略。
 
 ## 中期交互
+
+`inspect operations` 查询当前物品对其他已可见物品的合法作用目标，配合 tooltip 与 use_conditions 自行发现加工、升级和工具用途。capacity 返回原版背包格形的 total_cells、width、height，总容量不含嵌套容器。liquid 返回原版当前条件下的液量与品质说明。机器面板除按钮、标签页与槽位外，增加单选控件和滑块，动作参数按 controls 中的 parameters 提供 value 或 low/high。滑块使用原版步进和变化、释放回调，实机样本待验证。
+
+observe 增加 obligations，提供原版交租期限、金额、产权与按揭状态。customer_identity 提供已授权的独立 wanted、wanted_poster_id、stealth_wanted 和来源。通缉身份与普通犯罪线索分别读取。response_windows 提供原版响应窗口状态，screens 中的响应页列出选项、条件、tooltip_target 对应目标及正常动作，close_response 取消可关闭选择。背包选择尽可能关联原版候选背包及总容量。
+
+contact_cards 仅在对应名片打开时返回号码及 close_action，号码来自该名片关联的原版联系数据。先读取、关闭名片，再正常拨号并核对历史。关闭后的名片与选择目标不再可查询。加点购买记录是已执行操作的日志，重载后结合当前存档状态复核。
 
 `inspect` 增加 `tooltip`、`use_conditions` 和 `image`。tooltip 读取原版悬浮说明，包含当前条件下的标签与效果。use_conditions 需要 item 与 target，返回正常作用条件，执行动作是 use_item_on。可见选项的 tooltip_target 用于查询选项说明。展示柜客户效果通过 open_clientele 打开，读取屏幕或查询 display_case 的 tooltip，完成后 close_clientele。
 

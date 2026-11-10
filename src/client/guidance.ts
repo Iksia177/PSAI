@@ -11,18 +11,23 @@ const guidanceSchema = z.object({
 });
 
 export const defaultGuidance = {
-  version: '3',
+  version: '4',
   rules: [
     { id: 'read-effects', priority: 0, instruction: '移动、拆卸、升级或使用物品前，先读取相关物品、目标与设施的 tooltip 标签、效果和操作条件。根据 use_conditions 及原版提示选择工具和材料。' },
     { id: 'window-discipline', priority: 1, instruction: '优先只保留当前存取或使用所需的两个可关闭容器窗口。同一对容器可连续操作，完成或失败后关闭相关窗口。嵌套操作保留必要父窗口，结束时逆序关闭。' },
     { id: 'showcase-purpose', priority: 2, instruction: '展示柜具有影响客户群体等经营功能，陈列前先读取客户群体与效果，再结合经营目的决定物品。普通收纳优先选择用途合适的储物容器，空间不足时保留在主库存。' },
+    { id: 'rent-and-property', priority: 3, instruction: '关注 obligations 和租金提示，优先保障周期交租及必要支出，避免连续两次交租失败导致游戏失败。以通过正常购房事件取得店铺产权作为长期目标，结合租金、经营与购房条件安排资金。' },
+    { id: 'discover-operations', priority: 4, instruction: '优先使用结构化接口和文字发现操作。读取 tooltip、operations、use_conditions 和机器控件，自行学习加工与生产流程，按执行后的实际状态核对结果。图像仅在结构化信息和文字不足、有可疑线索或用户要求时按需查询。' },
+    { id: 'morning-machines', priority: 5, instruction: '起床后优先检查机器，收集并处理产物，补充合适投入物。结合可见电量、兼容性、运行状态和剩余资源，优先换上电量更多的适用电池，保留必要供电。' },
     { id: 'file-documents', priority: 10, instruction: '优先将已归自己所有、暂时不用的文件放入文档柜。' },
+    { id: 'contact-cards', priority: 12, instruction: '查看名片时优先读取 contact_cards 中的号码与面板文字，完成后关闭对应名片弹窗。需要联系时正常拨号，首次拨打后再核对原版联系历史。' },
     { id: 'store-idle-items', priority: 20, instruction: '优先将闲置自有物品整理至按用途适合且能够接收的容器，优先利用储物柜。正在交易、展示或生产使用的物品保留相应用途，先为机器运行计划保留投入物，缺少合适容器或容量时自行选择临时位置。' },
     { id: 'run-machines', priority: 30, instruction: '优先使具备运行条件的机器正常运转，结合可见说明、现有材料与当前目标，自行选择投入物及投入顺序，并安排正常运行所需的材料和供电。' },
     { id: 'night-electricity', priority: 40, instruction: '按实际运行需求建议夜间用电。仅在计划运行的设备需要夜间外部供电时考虑订电，结合当前可见的供电、储能与消耗条件判断。信息不足时先查询设备，避免仅按持有电器作决定。' },
+    { id: 'night-outing', priority: 45, instruction: '每晚在条件允许时优先考虑出门，结合当前目标、租金储备、时间和可见风险选择活动。外出选包优先选择当前允许携带、绝对总容量最大的背包，比较 capacity.total_cells，不以剩余空间代替总容量，同容量沿用列表顺序。' },
     { id: 'upgrade-review', priority: 50, instruction: '默认约每4个游戏日检查王德尔加点，可结合事件调整为3至5日。参考当前存档 save_context.upgrade_days_since_review 和购买记录，结合已有构筑与前置条件，约按1个主动构筑项目、2个被动项目交替考虑。默认仅使用专用货币，明确决定使用现金补差时传 allow_cash=true。' },
     { id: 'accept-events', priority: 60, instruction: 'NPC事件在资金、物品与前置条件满足并符合当前目标时，优先接受、购买或提交。读取完整条件与后续确认，资源冲突时结合用户目标自行取舍。' },
-    { id: 'wanted-evidence', priority: 70, instruction: '根据玩家可见通缉资料、顾客图像及已发现线索判断举报依据，使用 report_customer 时填写 evidence。举报按钮可操作仅表示当前可调用。' },
+    { id: 'wanted-evidence', priority: 70, instruction: '优先读取 customer_identity 的独立通缉字段及名单关联，并结合文字线索判断举报依据。区分通缉犯与普通盗窃、出售赃物或违禁品等情况，使用 report_customer 时填写 evidence 和信息来源。结构化身份由用户授权读取。只有仍存在有意义的疑点且文字不足时才按需取图。' },
   ],
 };
 

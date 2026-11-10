@@ -23,6 +23,7 @@ namespace PSAI
         {
             var store = PlayerStore.Instance;
             var map = MapUIManager.Instance;
+            CaptureInteractions(snapshot, screens, available);
             var confirmation = GenericConfirmationUIManager.Instance;
             AddScreen("generic_confirmation", confirmation?.panel, screens, available);
             if (confirmation != null && confirmation.panel.activeInHierarchy)
@@ -34,6 +35,7 @@ namespace PSAI
             }
             snapshot["save_context"] = new JObject { ["slot"] = store.saveSlotId, ["run"] = store.runID,
                 ["upgrade_days_since_review"] = store.daySinceLastBrowseUpgrade,
+                ["upgrade_history_requires_current_state_check"] = true,
                 ["upgrade_history"] = ReadUpgradeHistory() };
             snapshot["location"] = map == null || !map.IsOutside ? "store" : map.Current?.Id;
             var phone = PhoneUIManager.Instance;
@@ -74,7 +76,7 @@ namespace PSAI
             if (security != null && security.gameObject.activeInHierarchy && security.IsTooltipEnabled())
             {
                 visibleTooltips["security"] = security.GetTooltip;
-                snapshot["security"] = new JObject { ["prompt"] = security.GetTooltip(), ["identity_basis"] = "player_visible_evidence" };
+                snapshot["security"] = new JObject { ["prompt"] = security.GetTooltip(), ["identity_basis"] = "original_identity_fields_and_visible_evidence" };
                 if (!IsBusy(store) && store.currentClientInstance != null && security.IsClientArrestable())
                 {
                     AddAction(available, "report_customer", "Use the security button after assessing visible evidence", security.OnClick);
@@ -256,6 +258,7 @@ namespace PSAI
 
         private JObject? InspectMidgame(string target, string detail, JObject args)
         {
+            if (detail == "operations" || detail == "capacity" || detail == "liquid") return InspectInteractions(target, detail);
             if (detail == "image")
             {
                 if (!imageTargets.TryGetValue(target, out var bounds)) throw new InvalidOperationException("image_target_not_visible");

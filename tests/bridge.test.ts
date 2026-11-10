@@ -202,5 +202,15 @@ test('MCP stdio initializes, lists all six tools and calls bridge status', async
     assert.equal(image[1]!.type, 'image');
     assert.equal(image[1]!.data, pixel);
     assert.equal(JSON.parse(image[0]!.text!).data.image.data, undefined);
+    send({ jsonrpc: '2.0', id: 8, method: 'tools/call', params: { name: 'psai_act', arguments: {
+      action: 'range-item-1', low: 2, high: 7, expected_revision: 1, session_id: 'session-a',
+    } } });
+    assert.deepEqual(JSON.parse((await wait(8)).result.content![0]!.text!).data.received,
+      { action: 'range-item-1', low: 2, high: 7 });
+    send({ jsonrpc: '2.0', id: 9, method: 'tools/call', params: { name: 'psai_act', arguments: {
+      action: 'slider-item-1', value: 0.5, expected_revision: 1, session_id: 'session-a',
+    } } });
+    assert.deepEqual(JSON.parse((await wait(9)).result.content![0]!.text!).data.received,
+      { action: 'slider-item-1', value: 0.5 });
   } finally { child.stdin.end(); child.kill(); await game.stop(); }
 });

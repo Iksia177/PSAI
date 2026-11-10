@@ -20,3 +20,7 @@ if (UpgradePayment.ReadPrice("0\ue000") != 0) throw new Exception("Free upgrade 
 foreach (var value in new[] { "", "5 / 10", "-5", "1,2", "999999999999" })
     Reject(() => UpgradePayment.ReadPrice(value), "upgrade_cost_unreadable");
 Console.WriteLine("Upgrade payment checks passed (14 cases).");
+if (InventoryCapacity.CountUsableCells(3, 2, (_, _) => 0) != 6) throw new Exception("Rectangular inventory capacity failed");
+if (InventoryCapacity.CountUsableCells(3, 2, (x, y) => (byte)(x == 1 && y == 1 ? 1 : 0)) != 5) throw new Exception("Inventory wall counted as capacity");
+if (InventoryCapacity.CountUsableCells(3, 2, (_, _) => 1) != 0) throw new Exception("Blocked inventory capacity failed");
+Console.WriteLine("Inventory capacity checks passed (3 cases).");

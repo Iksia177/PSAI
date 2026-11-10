@@ -36,7 +36,7 @@ serveStdio(() => {
     }, () => call(() => client.send(tool)));
   }
   server.registerTool('psai_inspect', {
-    description: 'Query player-visible description, tooltip labels/effects, contents, machine, use_conditions (also supply item), or image. Image inspections first return image_status pending, then repeat to retrieve the rendered crop. Read image_targets/facilities from observe.',
+    description: 'Query description, tooltip labels/effects, contents, machine, capacity (total grid cells), liquid (original quality/volume tooltip), operations (discover usable visible targets), use_conditions (also supply item), or image. Prefer structured data and text. Observe includes user-authorized internal wanted identity fields. Image inspections first return pending, then repeat to retrieve the rendered crop.',
     inputSchema: { target: z.string(), detail: z.string().default('description'), item: z.string().optional() },
     annotations: { readOnlyHint: true },
   }, args => call(() => client.send('inspect', args)));
@@ -46,6 +46,7 @@ serveStdio(() => {
       action: z.string(), expected_revision: z.number().int().nonnegative(), session_id: z.string(),
       command_id: z.string().optional(), target: z.string().optional(), item: z.string().optional(), destination: z.string().optional(), count: z.number().int().positive().optional(),
       number: z.string().regex(/^[0-9]{1,9}$/).optional(), allow_cash: z.boolean().optional(), evidence: z.string().optional(),
+      value: z.number().optional(), low: z.number().optional(), high: z.number().optional(),
     }, annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
   }, args => call(() => {
     const { expected_revision, command_id, session_id, ...action } = args;
