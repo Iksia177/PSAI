@@ -54,4 +54,4 @@ Node 测试使用项目 `.cache/tests/` 中的隔离目录和文件通信测试�
 
 后续已通过 begin_control、重复命令去重、过期 revision 拒绝、开店及第一位顾客到达观察。测试存档初始为第 1 天、450 信用点，第一位顾客为导师。实机回执位于 artifacts/live。
 
-导师开场后发现手动等待状态下接口漏列 dialogue_advance。修复移除了对 isConversationActiveFlag 大于零的依赖，并增加顾客到达期间的 busy 条件。该修复通过编译与扫描，待更新后重启验证。
+导师开场后发现手动等待状态下接口漏列 dialogue_advance。修复移除了对 isConversationActiveFlag 大于零的依赖，并增加顾客到达期间的 busy 条件。该修复通过编译与扫描，已在用户退出游戏后安装并校验哈希，待重新载入验证。
