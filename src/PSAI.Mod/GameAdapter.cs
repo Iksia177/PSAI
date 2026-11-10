@@ -266,6 +266,8 @@ namespace PSAI
             {
                 if (!section.isHidden) CaptureElement(section.content, panel, path, section.label.GetText(), stock, visited);
             }
+            else if (element is MachineryIntake intake)
+                CaptureElement(intake.content, panel, path, label, stock, visited);
             else if (element is MachineryStack stack)
             {
                 for (var i = 0; i < stack.elements.Count; i++)

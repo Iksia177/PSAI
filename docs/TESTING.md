@@ -48,15 +48,19 @@ Node 测试使用项目 `.cache/tests/` 中的隔离目录和文件通信测试�
 
 ## 容器与机器扩展验收
 
-重新载入后的首项检查为日结报告。当前版本的 StartOfDayUIManager.ShowMorningReport 使用 AdvCalendarUIManager.OpenUIFromNightlyReport，旧 UIPanel 会漏读实际报告。新增 calendar_report 读取及 close_calendar_report 原版关闭动作后，需要先核对报告文字与当前日数，再关闭并确认对应 screen 消失，随后执行容器测试。2026-11-10 首次检查已证实旧接口漏读，修复后的读取与关闭仍待安装验证。
+重新载入后的首项检查为日结报告。当前版本的 StartOfDayUIManager.ShowMorningReport 使用 AdvCalendarUIManager.OpenUIFromNightlyReport，旧 UIPanel 会漏读实际报告。新增 calendar_report 读取及 close_calendar_report 原版关闭动作后，已在第 2 天实机读到“电费已结清”与店铺吸引力 250，关闭后确认对应 screen 消失。
 
-源码编译、75 方法原版扫描及 14 项客户端测试已通过。容器与机器的真实行为须在安装新包后验证。
+源码编译、75 方法原版扫描及 14 项客户端测试已通过。固定容器存取、嵌套隔离和交易期间自有容器读取已实机验证，水培槽位修复待更新后验证。
 
 ```powershell
 npm run test:panels -- --confirm-reversible-panels
 ```
 
 脚本要求已载入独立测试存档且状态稳定，会实际开关当前列出的容器与机器窗口。检查重复开关、打开后读取、关闭后库存隔离、失效查询目标、天数与现金保持一致，并恢复原窗口状态及接管选项。脚本保存每一步回执，异常时立即停止后续项目。
+
+实机曾发现展示柜 contents 返回单库存结构，脚本现兼容单库存与面板库存列表。另一次运行虽然完成开关检查，但水培报告零库存，旧断言未拦截。现增加非空库存断言。水培漏读原因是遗漏 MachineryIntake 包装层，源码已补充遍历，需更新安装后复跑。
+
+已完成的固定容器往返与文档类型拒绝、嵌套药瓶可见性和交易期间容器读取证据路径见 STATUS.md。交易测试使用自有药瓶及其 9 片营养片，已从交易托盘取回。实际成交范围、顾客所有的容器、便携储物柜、容量不足和部分转移仍待专项验证。
 
 之后使用当前观察中的物品和目标 ID 逐项完成以下实机检查。
 

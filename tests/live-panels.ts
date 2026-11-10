@@ -53,7 +53,9 @@ try {
       assert(panel.open);
       const detail = await call('inspect', { target: original.id, detail: panel.kind === 'machine' ? 'machine' : 'contents' });
       assert.equal(detail.status, 'completed', JSON.stringify(detail));
-      const inventories = (detail.data as { inventories: { id: string }[] }).inventories;
+      const content = detail.data as { id: string; items?: unknown[]; inventories?: { id: string }[] };
+      const inventories = content.items ? [content] : content.inventories!;
+      assert(inventories.length > 0, `No readable inventory in ${panel.name}`);
       assert.deepEqual(inventories.map(inventory => inventory.id), panel.inventories);
       let isolated = false;
       if (panel.can_close) {
