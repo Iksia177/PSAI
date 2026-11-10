@@ -8,7 +8,8 @@ test('default guidance is ordered, advisory, and defers to current user instruct
   const guidance = await loadGuidance('');
   assert.equal(guidance.mode, 'advisory');
   assert.equal(guidance.user_instructions_take_precedence, true);
-  assert.deepEqual(guidance.rules.map(rule => rule.id), ['file-documents', 'store-idle-items', 'night-electricity']);
+  assert.equal(guidance.version, '2');
+  assert.deepEqual(guidance.rules.map(rule => rule.id), ['file-documents', 'store-idle-items', 'run-machines', 'night-electricity']);
   assert.deepEqual(guidance.rules, defaultGuidance.rules);
 });
 
