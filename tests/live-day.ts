@@ -168,7 +168,7 @@ await waitFor(observation => observation.state.phase === 'CLOSED' && has(observa
 await act('open_nightly_report');
 await waitFor(observation => observation.state.screens.some(screen => screen.id === 'nightly_report'), 'nightly report');
 console.log('Nightly report', JSON.stringify((await observe()).state.screens));
-await clickLabel(/睡觉|结束一[天日]|结束今天|Sleep|End Day/i);
+await clickLabel(/睡觉|结束一[天日]|结束今天|结束营业|Sleep|End Day/i);
 const morning = await waitFor(observation => observation.state.day === 2, 'day two');
 await act('end_control');
 const restored = await observe();
