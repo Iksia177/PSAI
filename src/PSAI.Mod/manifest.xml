@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Manifest>
+  <ID>psai</ID>
+  <Name>PSAI - Probably Stolen Agent Interface</Name>
+  <Author>PSAI contributors</Author>
+  <ModVersion>0.1.0</ModVersion>
+  <Description>Development preparation skeleton. Gameplay tools are under development.</Description>
+  <GameVersions>
+    <Version>0.46D</Version>
+  </GameVersions>
+  <Prerequisites />
+  <Assemblies>
+    <Assembly>PSAI.Mod.dll</Assembly>
+  </Assemblies>
+  <Capabilities />
+</Manifest>

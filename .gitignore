@@ -1,0 +1,16 @@
+.cache/
+artifacts/
+**/bin/
+**/obj/
+node_modules/
+psai.local.json
+.env
+.env.*
+!.env.example
+*.user
+*.suo
+*.log
+*.es3
+*.dll
+*.exe
+*.pdb
