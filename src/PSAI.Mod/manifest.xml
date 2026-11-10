@@ -4,7 +4,7 @@
   <Name>PSAI - Probably Stolen Agent Interface</Name>
   <Author>PSAI contributors</Author>
   <ModVersion>0.1.0</ModVersion>
-  <Description>Development bridge for player-visible observations and normal game actions over local JSON tools. Experimental v0.1.</Description>
+  <Description>Agent interface for Probably Stolen with local JSON, CLI and MCP tools. Includes normal game actions, text-first observations and user-authorized wanted identity queries. Release v0.1.0.</Description>
   <GameVersions>
     <Version>0.46D</Version>
   </GameVersions>
