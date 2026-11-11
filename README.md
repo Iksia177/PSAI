@@ -11,7 +11,15 @@ Probably Stolen Agent Interface，为 Steam 版《深空当铺：可能是偷的
 - 优先读取结构化接口与文字，图像按需查询。当前顾客的独立内部通缉身份字段已获用户授权读取，观察结果标记来源。
 - 首版验收完成一个正常营业日，涵盖顾客、对话、库存、议价、交易与日结。
 
-## 本机开发
+## 安装与首次使用
+
+推荐安装方式为游戏侧订阅 Steam 创意工坊的 PSAI 模组，agent 侧下载本 GitHub 项目并使用 CLI / MCP 工具。PSAI 工坊条目尚待发布，实际订阅链接将在发布后补入。当前可按下文手动构建与安装游戏侧模组。
+
+下载工具后，使用 Node.js 24 执行 `npm ci --ignore-scripts --registry=https://registry.npmjs.org` 即可完成工具准备。准备完成后告知用户下一步安装与载入要求，桥接检查安排在用户确认已进入可操作存档之后。
+
+游戏侧完成安装后，由用户启用 PSAI、重启游戏并载入独立存档。用户确认就绪后，再执行 `node src/client/cli.ts status`，确认 online、ready、compatible 后读取 observe。缺少桥接、游戏离线或停在主菜单时，按 recovery 提示说明所需人工操作，保存进度并结束本轮，收到用户就绪确认后继续。
+
+## 手动安装与本机开发
 
 需要 PowerShell 7、global.json 指定的 .NET SDK 和已安装的 Steam 游戏。后续 CLI 与 MCP 使用 Node.js 24。
 
@@ -32,19 +40,26 @@ pwsh -NoProfile -File scripts/Scan.ps1
 
 ## CLI 与 MCP
 
-Node.js 24 可以直接运行本项目的 TypeScript 入口。安装锁定依赖后执行检查与测试。
+Node.js 24 可以直接运行本项目的 TypeScript 入口。开发者可以离线检查类型和运行自动测试。
 
 ```powershell
 npm ci --ignore-scripts --registry=https://registry.npmjs.org
 npm run check
 npm run build
 npm test
+```
+
+以下命令在用户确认存档已载入后执行。
+
+```powershell
 node src/client/cli.ts status
 node src/client/cli.ts observe
 node src/client/cli.ts actions
 ```
 
 CLI 默认使用当前用户的 `AppData/LocalLow/Questing Goose Studio/Probably Stolen/ModData/psai`。可使用 `--data-dir` 或 `PSAI_DATA_DIR` 指定路径。`observe` 回执提供 `session_id` 和 `data.revision`，动作必须携带这两个值。
+
+该目录是 PSAI 的正常通信目录。CLI 写入 intent、request 和临时发布文件，模组写入 status、result 及按存档归属的加点记录，并消费已处理请求。工具接入需要对该目录读写。游戏存档与全局设置不属于桥接故障的自动修复入口。未知 AppData 路径的权限请求需要保留具体路径与原文再核对。
 
 ```powershell
 node src/client/cli.ts act '{"action":"begin_control"}' --revision 1 --session <session_id>
@@ -69,7 +84,19 @@ node src/client/cli.ts act '{"action":"open_panel","target":"<panel_id>"}' --rev
 
 ## 跨会话游玩偏好
 
-CLI 和 MCP 的 `status`、`observe` 返回 `guidance`，包含偏好版本和按 priority 从小到大排列的建议。第 5 版增加优先保留展示柜物品、每日读取日报、开店和夜间回店后收回柜台自有物品。周期交租、产权目标、晨间机器整理和其他建议继续提供，具体加工与经营流程由模型判断。
+CLI 和 MCP 的 `status`、`observe` 返回 `guidance`，包含偏好版本和按 priority 从小到大排列的建议。第 6 版增加推荐每天开店前、确认成交后、外出回店后向用户简短回报结果、选择理由及下一步意图，用户可调整频率。交易指导要求读取真实候选及原版报价。周期交租、产权目标、晨间机器整理、窗口收尾和其他建议继续提供。
+
+## 顾客、交易与新闻
+
+customer_context 提供会话内 id、原版 game_id、名称、到达状态和已授权的通缉信息，该 id 与 firearm.target 一致。customer_queue.remaining 是原版已排队但尚未到达的数量，不包含当前顾客，可能包含已排入队列的事件来访。dialogue 保留已显示文字，并在 full_text 返回当前对白完整文本，customer_id 关联已到达的当前顾客。
+
+trade 返回当前顾客关联、原版意图、mode_text、需求文字、预算、visible_owned_items、sell_candidates、counter_items、sell_offer_items、rows 和相关窗口文字与 action_ids。sell_candidates 仅从当前可见库存的实际自有物品产生，说明查询目标不会加入候选。候选匹配需求仍需核对预算、类型、容量和原版动作条件。
+
+出售物品应放入 `trade.offer_inventory`，其值为 `back_counter`，中文名称为交易备货台。`counter` 是前柜台。移动后重新观察原版 sell_offer_items 与平板 rows，再使用当前动作完成交易。rows 包含原版物品行的选择动作、文字和选中状态；名称重复时 matching_item_ids 返回多个可能实例，item_id 为空，避免猜测实例对应关系。每次操作使用最新会话和 revision，动作结果仍需复核。
+
+每日报纸使用独立的 daily_news 屏幕，读取后执行 close_daily_news。它与晨间报告及日结报告分别读取、关闭。
+
+性能测量使用 `node scripts/Measure-Bridge.ts` 保存离线目录枚举对比。用户确认存档已载入后可用 `node scripts/Measure-Bridge.ts --live` 测量只读请求。设置 `PSAI_PROFILE=1` 时 CLI/MCP 回执附带 client_performance，包含端到端耗时与回执体积。原版桥接回执的 performance 提供快照耗时、生成次数、目录枚举耗时、文件数和处理请求数，status 也提供目录统计。诊断数据不参与状态 revision。离线代理数据与 Unity 实测分别报告。
 
 外出使用原版店门 OnClick 入口及其条件。outing.visits_remaining 返回原版当晚剩余次数，can_depart_now 与门的提示说明当前是否可以出发，实际调用前再次检查。原版的次数、伤势、封锁、休息及解锁条件生效，次数变化随原版状态读取。
 

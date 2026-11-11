@@ -2,7 +2,7 @@
 <Manifest>
   <ID>psai</ID>
   <Name>PSAI - Probably Stolen Agent Interface</Name>
-  <Author>PSAI contributors</Author>
+  <Author>Iksia</Author>
   <ModVersion>0.1.0</ModVersion>
   <Description>Agent interface for Probably Stolen with local JSON, CLI and MCP tools. Includes normal game actions, text-first observations and user-authorized wanted identity queries. Release v0.1.0.</Description>
   <GameVersions>

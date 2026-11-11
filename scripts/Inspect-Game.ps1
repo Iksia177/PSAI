@@ -55,7 +55,13 @@ try {
         @('StoreUIManager', 'ExitShootingMode', 0),
         @('GeneralHelper', 'IsItemEffectivelyOwned', 1),
         @('StoreDoor', 'OnClick', 0),
-        @('StoreDoor', 'GetTooltip', 0)
+        @('StoreDoor', 'GetTooltip', 0),
+        @('NewsUIManager', 'CloseUI', 0),
+        @('NegociationUIManager', 'GetSellableItem', 0),
+        @('NegociationUIManager', 'GetNotBuyingReason', 1),
+        @('StoreClient', 'GetBudget', 0),
+        @('StoreClient', 'IsClientBuyingThisItem', 1),
+        @('StoreClient', 'HasBudgetLeftToBuy', 1)
     )
     $checks = @($required | ForEach-Object {
         $typeName, $methodName, $parameterCount = $_

@@ -36,6 +36,23 @@ export function defaultDataDirectory(): string {
   return process.env.PSAI_DATA_DIR ?? join(homedir(), 'AppData', 'LocalLow', 'Questing Goose Studio', 'Probably Stolen', 'ModData', 'psai');
 }
 
+function recoveryFor(message: string) {
+  const code = message.split(':')[0] ?? message;
+  const steps: Record<string, string> = {
+    bridge_not_started: '请用户安装并启用 PSAI 模组，重启游戏，然后载入存档并确认已进入可操作界面。',
+    bridge_offline: '请用户启动游戏并载入存档，确认 PSAI 已启用；若刚退出游戏，等待用户重新载入。',
+    game_not_ready: '请用户载入存档，进入店铺可操作界面后再继续。',
+  };
+  return steps[code] ? { user_action_required: true, message: steps[code],
+    agent_instruction: '保存当前进度，明确告知用户所需操作并结束本轮。收到用户就绪确认后再检查桥接，避免循环重试或修改游戏存档、设置。' } : undefined;
+}
+
+export function bridgeErrorOutput(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  const recovery = recoveryFor(message);
+  return { status: 'error', error: message, ...(recovery ? { recovery } : {}) };
+}
+
 function safeId(value: string): string {
   if (!/^[a-z0-9-]{1,64}$/.test(value)) throw new Error('invalid_id');
   return value;
@@ -83,7 +100,8 @@ export class BridgeClient {
     safeId(status.session_id);
     const age = Date.now() - Date.parse(status.updated_at);
     if (!Number.isFinite(age) || age > 15000 || age < -15000 || status.online !== true) throw new Error('bridge_offline');
-    return { ...status, guidance: await loadGuidance() };
+    return { ...status, guidance: await loadGuidance(),
+      ...(!status.ready ? { recovery: recoveryFor('game_not_ready') } : {}) };
   }
 
   async result(id: string, session?: string): Promise<Receipt> {
@@ -105,7 +123,13 @@ export class BridgeClient {
   async send(tool: Request['tool'], args: Record<string, unknown> = {}, options: {
     revision?: number; commandId?: string; session?: string;
   } = {}): Promise<Receipt> {
+    const started = performance.now();
+    const finish = (receipt: Receipt): Receipt => process.env.PSAI_PROFILE === '1' ? {
+      ...receipt, client_performance: { round_trip_ms: performance.now() - started,
+        receipt_bytes: Buffer.byteLength(JSON.stringify(receipt)) },
+    } : receipt;
     const status = await this.status();
+    if (!status.ready) throw new Error('game_not_ready');
     if (options.session && options.session !== status.session_id) throw new Error('stale_session');
     if (tool === 'act' && (!Number.isSafeInteger(options.revision) || options.revision! < 0)) throw new Error('expected_revision_required');
     if (tool === 'act' && !options.session) throw new Error('expected_session_required');
@@ -151,14 +175,14 @@ export class BridgeClient {
         const result = await this.result(request.command_id, request.session_id);
         if (result.request && canonical(result.request) !== canonical(request)) throw new Error('command_id_conflict');
         if (result.status !== 'pending') {
-          if (tool === 'observe' && result.status === 'completed') return { ...result, guidance: status.guidance };
-          return result;
+          if (tool === 'observe' && result.status === 'completed') return finish({ ...result, guidance: status.guidance });
+          return finish(result);
         }
       } catch (error) {
         if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
       }
       await delay(100);
     }
-    return this.result(request.command_id, request.session_id);
+    return finish(await this.result(request.command_id, request.session_id));
   }
 }

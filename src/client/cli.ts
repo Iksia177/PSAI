@@ -1,5 +1,5 @@
 import { parseArgs } from 'node:util';
-import { BridgeClient } from './bridge.ts';
+import { BridgeClient, bridgeErrorOutput } from './bridge.ts';
 
 try {
   const { values, positionals } = parseArgs({
@@ -27,6 +27,6 @@ try {
   process.stdout.write(JSON.stringify(result, null, 2) + '\n');
   if ((result as { status?: string }).status === 'error') process.exitCode = 1;
 } catch (error) {
-  process.stdout.write(JSON.stringify({ status: 'error', error: error instanceof Error ? error.message : String(error) }) + '\n');
+  process.stdout.write(JSON.stringify(bridgeErrorOutput(error)) + '\n');
   process.exitCode = 1;
 }

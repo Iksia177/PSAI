@@ -156,3 +156,16 @@ npm run test:live -- --confirm-day-one
 本次证据汇总位于 artifacts/live/day-one-1794297467047/summary.json，记录第 1 天初始 450、买入后 425、卖出后 455、扣除夜间电力 5 后第 2 天 450。汇总生成时逐项断言会话一致、重复购买回执未再次扣款、最终 MORNING/day=2、controlled=false，以及三个控制选项与接管前一致。续跑回执保存在 artifacts/live，汇总中包含相对路径。
 
 本轮存在人工界面操作介入，日结界面的读取与关闭仍待验证。其余缺口包括全部异常场景、卸载后的存档载入，以及 MCP 入口直接完成整日流程。详见 STATUS.md 的剩余范围。
+
+## 第 6 版指导与交易信息修复验收
+
+本批新能力为 customer_context、structured_trade、daily_news、customer_queue、request_timings。先完成离线检查，安装后等待用户确认载入独立副本。继续遵守不睡觉进入下一天。
+
+- 观察 guidance.version=6，顾客上下文 id 与 firearm.target 相同。读取当前完整对白、需求、预算和交易屏幕，顾客离开后上下文与 trade 清空，下一位实例 ID 更新。
+- 激活当天新闻报纸，读取 daily_news，执行 close_daily_news 后确认 screen 和对应动作消失。晨间报告另行读取关闭。
+- 用真实可见库存核对 sell_candidates，关闭容器后其物品退出候选。对白选项的 tooltip_target 无论是否可查询说明，均不得单凭该目标进入候选。名称重复的平板行保留 matching_item_ids，不能随意绑定某个实例。
+- 向 counter 移动一件合法自有物品，核对它未进入 sell_offer_items。再移入 back_counter，核对原版平板列表、数量、rows 与操作关联，正常选择并成交。记录现金、数量、归属和原版反馈。需求不符、预算不足和移走备货物品分别核对，保留原版拒绝与确认。
+- 叫下一位时确认原版 remaining 的变化，当前顾客单独表达，事件顾客按原版队列计数。
+- 开店前、成功成交后和外出回店后，按第 6 版指导简短回报结果、理由和下一步。回报可以继续已授权操作，用户可调整频率。
+- 未启动游戏、未启用桥接、主菜单、载入存档分别检查接入提示。未就绪不得产生游戏请求，CLI/MCP 提示保持一致。下载工具完成后无需自动进行实机桥接测试。
+- 运行 node scripts/Measure-Bridge.ts 保存离线枚举对比，载入后运行同脚本 --live 保存观察、动作清单和说明查询的耗时及回执。实际游戏动作在 PSAI_PROFILE=1 时记录 client_performance，原生 performance 给出快照、目录扫描和请求计数。对比同场景的稳定样本，异步动画、缓存预热与模型思考另行记录。

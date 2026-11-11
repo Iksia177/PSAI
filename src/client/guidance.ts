@@ -11,7 +11,7 @@ const guidanceSchema = z.object({
 });
 
 export const defaultGuidance = {
-  version: '5',
+  version: '6',
   rules: [
     { id: 'read-effects', priority: 0, instruction: '移动、拆卸、升级或使用物品前，先读取相关物品、目标与设施的 tooltip 标签、效果和操作条件。根据 use_conditions 及原版提示选择工具和材料。' },
     { id: 'window-discipline', priority: 1, instruction: '优先只保留当前存取或使用所需的两个可关闭容器窗口。同一对容器可连续操作，完成或失败后关闭相关窗口。嵌套操作保留必要父窗口，结束时逆序关闭。' },
@@ -21,6 +21,8 @@ export const defaultGuidance = {
     { id: 'morning-machines', priority: 5, instruction: '起床后优先检查机器，收集并处理产物，补充合适投入物。结合可见电量、兼容性、运行状态和剩余资源，优先换上电量更多的适用电池，保留必要供电。' },
     { id: 'read-daily-report', priority: 6, instruction: '每日先读取日报的夜间结果、事件线索、服务和状态信息，结合当前任务安排操作，读取完成后关闭报告。' },
     { id: 'counter-cleanup', priority: 7, instruction: '每次开店后和夜间回店后，优先检查交易台与柜台，把确认属于自己且无“未拥有”标识的物品收回主库存。先读 tooltip 或所有权字段，避免移走顾客物品。空间不足时按容器用途暂存，正在处理的交易或任务物品按当前目标安排。' },
+    { id: 'user-progress-reports', priority: 8, instruction: '推荐每天开店前（读取日报、整理库存与机器后）、每次确认实际成交后、夜间外出回店后，向用户简短回报已完成的操作、实际结果、选择理由和接下来打算做的事，方便用户及时指导。成交以现金、归属及原版结果复核，不把处理函数返回直接当作成交。用户可以调整回报频率；日常回报无需等待用户批准后续已授权操作。' },
+    { id: 'trade-context', priority: 9, instruction: '交易先读 customer_context、dialogue.full_text、trade 和当前窗口文字。候选只从 trade.sell_candidates 或已观察库存中的实际物品选择。出售时将物品放入 trade.offer_inventory（back_counter，交易备货台），再核对原版 sell_offer_items 和 rows。counter 是前柜台，物品移动成功也不等于已加入报价。需求、预算或选择条件不满足时读取原版拒绝信息。' },
     { id: 'file-documents', priority: 10, instruction: '优先将已归自己所有、暂时不用的文件放入文档柜。' },
     { id: 'contact-cards', priority: 12, instruction: '查看名片时优先读取 contact_cards 中的号码与面板文字，完成后关闭对应名片弹窗。需要联系时正常拨号，首次拨打后再核对原版联系历史。' },
     { id: 'store-idle-items', priority: 20, instruction: '优先将闲置自有物品整理至按用途适合且能够接收的容器，优先利用储物柜。正在交易、展示或生产使用的物品保留相应用途，先为机器运行计划保留投入物，缺少合适容器或容量时自行选择临时位置。' },

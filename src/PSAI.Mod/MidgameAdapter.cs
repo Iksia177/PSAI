@@ -50,7 +50,7 @@ namespace PSAI
             }
             if (!IsBusy(store))
             {
-                var phoneObject = UnityEngine.Object.FindObjectOfType<StorePhoneObject>();
+                var phoneObject = FindCached(ref cachedPhone);
                 if (phoneObject != null && phoneObject.gameObject.activeInHierarchy)
                     AddAction(available, "open_phone", "Pick up the telephone", phoneObject.OnClick);
             }
@@ -105,7 +105,7 @@ namespace PSAI
 
             var clientele = ClienteleUIManager.Instance;
             AddScreen("clientele", clientele?.panel, screens, available);
-            var display = UnityEngine.Object.FindObjectOfType<StoreClienteleDisplay>();
+            var display = FindCached(ref cachedDisplay);
             if (clientele != null && display != null && display.gameObject.activeInHierarchy)
             {
                 if (clientele.panel.activeInHierarchy)
@@ -168,7 +168,7 @@ namespace PSAI
                 }
             }
             snapshot["destinations"] = destinations;
-            var door = UnityEngine.Object.FindObjectOfType<StoreDoor>();
+            var door = FindCached(ref cachedDoor);
             if (CanStartOuting(door))
                 AddAction(available, "open_outside_confirmation", "Use the original door to begin an outing", () => {
                     if (!CanStartOuting(door)) throw new InvalidOperationException("outing_not_available");

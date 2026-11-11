@@ -10,7 +10,7 @@ namespace PSAI
         private void CaptureInteractions(JObject snapshot, JArray screens, JArray available)
         {
             var store = PlayerStore.Instance;
-            var door = UnityEngine.Object.FindObjectOfType<StoreDoor>();
+            var door = FindCached(ref cachedDoor);
             snapshot["outing"] = new JObject {
                 ["day"] = StoreStation.Instance.dayCounter, ["last_outing_day"] = store.lastAfterhourOutingDay,
                 ["already_went_out_tonight"] = store.lastAfterhourOutingDay == StoreStation.Instance.dayCounter,

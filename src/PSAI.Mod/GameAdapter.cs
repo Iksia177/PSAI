@@ -42,6 +42,7 @@ namespace PSAI
         {
             itemIds.Clear(); items.Clear(); inventories.Clear(); actions.Clear(); panels.Clear();
             inventoryViews.Clear(); panelList.Clear(); nextItem = 0;
+            ClearSceneReferences();
             ClearMidgame();
         }
 
@@ -75,11 +76,18 @@ namespace PSAI
             snapshot["phase"] = store.storeState.ToString();
             snapshot["day"] = StoreStation.Instance.dayCounter;
             snapshot["cash"] = store.playerCash;
+            CaptureCustomer(snapshot);
             snapshot["customer"] = Text(dialogue.clientNameTMP);
             snapshot["dialogue"] = new JObject {
                 ["customer"] = Text(dialogue.clientBubble?.textfield),
                 ["player"] = Text(dialogue.playerBubble?.textfield),
-                ["security"] = Text(dialogue.secBubble?.textfield)
+                ["security"] = Text(dialogue.secBubble?.textfield),
+                ["customer_id"] = !store.isClientArrived || firearmTarget.Length == 0 ? null : firearmTarget,
+                ["full_text"] = new JObject {
+                    ["customer"] = store.currentClientInstance != null && store.isClientArrived ? FullText(dialogue.clientBubble?.textfield) : "",
+                    ["player"] = FullText(dialogue.playerBubble?.textfield),
+                    ["security"] = FullText(dialogue.secBubble?.textfield)
+                }
             };
             var available = new JArray();
             var stock = new JArray();
@@ -115,6 +123,7 @@ namespace PSAI
                 AddAction(available, "close_calendar_report", "Close the calendar and daily report", calendar.CloseUI);
             AddScreen("close_shop_confirmation", StoreUIManager.Instance.closeShutterConfirmationPanel, screens, available);
             CaptureMidgame(snapshot, screens, available, stock);
+            CaptureTrade(snapshot, screens, available);
             snapshot["panels"] = new JArray(panelList.Select(panel => panel.View));
             snapshot["screens"] = screens;
 
@@ -170,7 +179,7 @@ namespace PSAI
                 if (store.lockShutterButtonFlag == 0 && StoreShutterButton.Instance != null &&
                     ((int) store.storeState == 2 || ((int) store.storeState == 1 && store.CanEndDay())))
                     AddAction(available, "shutter", "Use the shop shutter control", StoreShutterButton.Instance.OnClick);
-                var bed = UnityEngine.Object.FindObjectOfType<StoreBedroll>();
+                var bed = FindCached(ref cachedBed);
                 if (bed != null && (int) store.storeState == 0)
                     AddAction(available, "open_nightly_report", "Use the bedroll to open the nightly report", bed.OnClick);
             }
@@ -215,6 +224,7 @@ namespace PSAI
             inventories[id] = inventory;
             var contents = new JArray();
             var view = new JObject { ["id"] = id, ["items"] = contents,
+                ["name"] = InventoryName(id, slotName ?? window.titleString),
                 ["panel"] = panelId, ["slot_name"] = slotName ?? window.titleString };
             inventoryViews[id] = view;
             result.Add(view);
@@ -365,10 +375,12 @@ namespace PSAI
         private void AddScreen(string id, GameObject? root, JArray screens, JArray available)
         {
             if (root == null || !root.activeInHierarchy) return;
+            var actionIds = new JArray();
             screens.Add(new JObject {
                 ["id"] = id,
+                ["action_ids"] = actionIds,
                 ["text"] = new JArray(root.GetComponentsInChildren<TextMeshProUGUI>(false)
-                    .Select(Text).Concat(root.GetComponentsInChildren<UnityEngine.UI.Text>(false)
+                    .Select(FullText).Concat(root.GetComponentsInChildren<UnityEngine.UI.Text>(false)
                         .Where(field => field.isActiveAndEnabled).Select(field => field.text))
                     .Where(text => text.Length > 0).Distinct())
             });
@@ -376,6 +388,7 @@ namespace PSAI
             {
                 if (!button.isActiveAndEnabled) continue;
                 var target = "button-" + button.GetInstanceID();
+                actionIds.Add(target);
                 if (available.OfType<JObject>().Any(option => option.Value<string>("action") == target)) continue;
                 var label = string.Join(" ", button.GetComponentsInChildren<TextMeshProUGUI>(false).Select(Text)
                     .Concat(button.GetComponentsInChildren<UnityEngine.UI.Text>(false)
@@ -408,6 +421,9 @@ namespace PSAI
             var text = field.GetParsedText();
             return text.Substring(0, Math.Min(text.Length, Math.Max(0, field.maxVisibleCharacters)));
         }
+
+        private static string FullText(TextMeshProUGUI? field) =>
+            field == null || !field.isActiveAndEnabled ? "" : field.GetParsedText();
 
         private static bool PanelVisible(PixelWindow window) => window.IsVisible() && window.rectTransform.gameObject.activeInHierarchy;
 

@@ -5,7 +5,7 @@ import { join, resolve } from 'node:path';
 import { execFile, spawn } from 'node:child_process';
 import { promisify } from 'node:util';
 import { setTimeout as delay } from 'node:timers/promises';
-import { BridgeClient, type Request } from '../src/client/bridge.ts';
+import { BridgeClient, bridgeErrorOutput, type Request } from '../src/client/bridge.ts';
 import { loadGuidance } from '../src/client/guidance.ts';
 
 async function fixture() {
@@ -47,6 +47,21 @@ test('round trip preserves request identity and caller arguments', async () => {
     assert.deepEqual(result.data, { revision: 1, received: { target: 'item-1', detail: 'description' } });
     assert.equal(game.seen.size, 1);
   } finally { await game.stop(); }
+});
+
+test('not-ready saves require user handoff without publishing a request', async () => {
+  const { directory, status, client } = await fixture();
+  await writeFile(join(directory, 'status.json'), JSON.stringify({ ...status, ready: false }));
+  assert.equal((await client.status()).recovery !== undefined, true);
+  await assert.rejects(client.send('observe'), /game_not_ready/);
+  assert.deepEqual(await readdir(directory), ['status.json']);
+  for (const message of ['bridge_not_started: enable PSAI', 'bridge_offline', 'game_not_ready']) {
+    const response = bridgeErrorOutput(new Error(message));
+    assert.equal(response.error, message);
+    assert.equal(response.recovery?.user_action_required, true);
+    assert.match(response.recovery!.agent_instruction, /结束本轮/);
+  }
+  assert.equal(bridgeErrorOutput(new Error('stale_revision')).recovery, undefined);
 });
 
 test('concurrent equal command IDs publish one intent and return one receipt', async () => {
@@ -140,7 +155,7 @@ test('CLI executes through its public entry point and emits JSON', async () => {
 });
 
 test('MCP stdio initializes, lists all six tools and calls bridge status', async () => {
-  const { directory } = await fixture();
+  const { directory, status } = await fixture();
   const pixel = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6G5sAAAAASUVORK5CYII=';
   const game = peer(directory, request => request.arguments.detail === 'image'
     ? { image_status: 'ready', image: { mime_type: 'image/png', data: pixel } }
@@ -212,5 +227,12 @@ test('MCP stdio initializes, lists all six tools and calls bridge status', async
     } } });
     assert.deepEqual(JSON.parse((await wait(9)).result.content![0]!.text!).data.received,
       { action: 'slider-item-1', value: 0.5 });
+    await writeFile(join(directory, 'status.json'), JSON.stringify({ ...status, ready: false, updated_at: new Date().toISOString() }));
+    send({ jsonrpc: '2.0', id: 10, method: 'tools/call', params: { name: 'psai_observe', arguments: {} } });
+    const recovery = JSON.parse((await wait(10)).result.content![0]!.text!);
+    const cli = await promisify(execFile)(process.execPath, ['src/client/cli.ts', 'observe', '--data-dir', directory])
+      .catch(error => ({ stdout: error.stdout as string }));
+    assert.deepEqual(JSON.parse(cli.stdout), recovery);
+    assert.equal(recovery.recovery.user_action_required, true);
   } finally { child.stdin.end(); child.kill(); await game.stop(); }
 });

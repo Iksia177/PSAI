@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
@@ -22,6 +23,11 @@ namespace PSAI
         private bool stopped;
         private string? lastError;
         private bool heartbeatLogged;
+        private double directoryMilliseconds;
+        private int directoryFileCount;
+        private double snapshotMilliseconds;
+        private int snapshotCount;
+        private long requestsProcessed;
 
         internal Bridge(ModLog log) { this.log = log; }
 
@@ -73,7 +79,11 @@ namespace PSAI
                 Write("status.json", Status(true));
             }
             // One request per tick keeps state-changing operations serialized.
-            var requestFile = ModHelper.ListModDataFiles("psai")
+            var listingTimer = Stopwatch.StartNew();
+            var files = ModHelper.ListModDataFiles("psai");
+            directoryMilliseconds = listingTimer.Elapsed.TotalMilliseconds;
+            directoryFileCount = files.Count;
+            var requestFile = files
                 .Where(path => path.StartsWith("request-", StringComparison.Ordinal) && path.EndsWith(".json", StringComparison.Ordinal))
                 .OrderBy(path => path, StringComparer.Ordinal).FirstOrDefault();
             if (requestFile != null) Process(requestFile);
@@ -87,15 +97,19 @@ namespace PSAI
                 ["compatible"] = game.Compatible, ["game_version"] = PlayerStore.VERSION,
                 ["updated_at"] = DateTimeOffset.UtcNow.ToString("o"),
                 ["last_error"] = lastError,
+                ["performance"] = new JObject { ["directory_scan_ms"] = directoryMilliseconds,
+                    ["directory_file_count"] = directoryFileCount, ["requests_processed"] = requestsProcessed },
                 ["tools"] = new JArray("status", "observe", "inspect", "actions", "act", "result"),
                 ["features"] = new JArray("visible_tooltips", "targeted_item_use", "telephone", "upgrade_payment_guard", "afterhour", "visible_image_crops",
                     "response_choices", "contact_cards", "authorized_wanted_identity", "operation_discovery", "rent_obligations",
-                    "outing_state", "firearm_actions", "visible_ownership", "scripted_dialogue")
+                    "outing_state", "firearm_actions", "visible_ownership", "scripted_dialogue",
+                    "customer_context", "structured_trade", "daily_news", "customer_queue", "request_timings")
             };
         }
 
         private JObject Snapshot()
         {
+            var timer = Stopwatch.StartNew();
             var snapshot = game.Capture();
             var serialized = snapshot.ToString(Formatting.None);
             if (serialized != previousSnapshot)
@@ -104,6 +118,8 @@ namespace PSAI
                 revision++;
             }
             snapshot["revision"] = revision;
+            snapshotMilliseconds += timer.Elapsed.TotalMilliseconds;
+            snapshotCount++;
             return snapshot;
         }
 
@@ -159,6 +175,9 @@ namespace PSAI
                 ["request"] = request.DeepClone()
             };
             var invoked = false;
+            var requestTimer = Stopwatch.StartNew();
+            snapshotMilliseconds = 0;
+            snapshotCount = 0;
             try
             {
                 if (requestSession != session) throw new InvalidOperationException("stale_session");
@@ -196,6 +215,13 @@ namespace PSAI
             }
             // A completed receipt means the handler returned. Animations may still be busy.
             result["revision"] = revision;
+            requestsProcessed++;
+            result["performance"] = new JObject {
+                ["handler_ms"] = requestTimer.Elapsed.TotalMilliseconds,
+                ["snapshot_ms"] = snapshotMilliseconds, ["snapshot_count"] = snapshotCount,
+                ["directory_scan_ms"] = directoryMilliseconds, ["directory_file_count"] = directoryFileCount,
+                ["requests_processed"] = requestsProcessed
+            };
             Write(resultPath, result);
             fingerprints[id] = fingerprint;
             ModHelper.DeleteModDataFile("psai", path);

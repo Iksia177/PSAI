@@ -22,12 +22,7 @@ namespace PSAI
             var store = PlayerStore.Instance;
             var ui = StoreUIManager.Instance;
             var current = store.currentClientInstance;
-            if (!ReferenceEquals(current, firearmClient))
-            {
-                firearmClient = current;
-                firearmTarget = current == null ? "" : "customer-" + (++nextFirearmTarget);
-            }
-            var gun = UnityEngine.Object.FindObjectOfType<Shotgun>();
+            var gun = FindCached(ref cachedGun);
             var ready = !IsBusy(store) && current != null && store.isClientArrived;
             var canRaise = ready && !ui.isShootingMode && gun != null && gun.isActiveAndEnabled && gun.CanPickup();
             var canShoot = ready && ui.isShootingMode && ui.CanShoot();
