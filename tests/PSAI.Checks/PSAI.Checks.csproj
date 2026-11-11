@@ -7,5 +7,6 @@
   <ItemGroup>
     <Compile Include="../../src/PSAI.Mod/UpgradePayment.cs" Link="UpgradePayment.cs" />
     <Compile Include="../../src/PSAI.Mod/InventoryCapacity.cs" Link="InventoryCapacity.cs" />
+    <Compile Include="../../src/PSAI.Mod/AppraisalInput.cs" Link="AppraisalInput.cs" />
   </ItemGroup>
 </Project>

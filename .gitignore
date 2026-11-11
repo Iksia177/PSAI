@@ -1,4 +1,5 @@
 .cache/
+.local-dev/
 artifacts/
 **/bin/
 **/obj/

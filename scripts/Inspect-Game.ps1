@@ -65,7 +65,16 @@ try {
         @('BarterCondition', 'IsItemValid', 1),
         @('BarterOffer', 'IsBarterAcceptable', 0),
         @('BarterOffer', 'OfferSetCount', 0),
-        @('BarterOffer', 'UseCondition', 0)
+        @('BarterOffer', 'UseCondition', 0),
+        @('InspectionUIManager', 'OnInspectItem', 1),
+        @('InspectionUIManager', 'CloseUI', 0),
+        @('InspectionUIManager', 'StartEditingAppraisalField', 0),
+        @('InspectionUIManager', 'FinishEditingAppraisalField', 0),
+        @('InspectionUIManager', 'OnAppraisalServiceEstimated', 0),
+        @('CigaretteUI', 'OnInit', 1),
+        @('AppHandUI', 'OnInit', 1),
+        @('RibwichUI', 'OnInit', 1),
+        @('FuelUI', 'OnInit', 1)
     )
     $checks = @($required | ForEach-Object {
         $typeName, $methodName, $parameterCount = $_

@@ -16,14 +16,15 @@ namespace PSAI
         private readonly Dictionary<string, Func<Rect>> imageTargets = new Dictionary<string, Func<Rect>>();
         private readonly Dictionary<string, object> imageContexts = new Dictionary<string, object>();
 
-        private void ClearMidgame() { ClearMidgameViews(); ClearFirearm(); GameImages.Reset(); }
-        private void ClearMidgameViews() { parameterActions.Clear(); visibleTooltips.Clear(); imageTargets.Clear(); imageContexts.Clear(); }
+        private void ClearMidgame() { ClearMidgameViews(); inspectionItem = null; inspectionImageContext = null; ClearFirearm(); GameImages.Reset(); }
+        private void ClearMidgameViews() { parameterActions.Clear(); visibleTooltips.Clear(); imageTargets.Clear(); imageContexts.Clear(); inspectionView = null; }
 
         private void CaptureMidgame(JObject snapshot, JArray screens, JArray available, JArray stock)
         {
             var store = PlayerStore.Instance;
             var map = MapUIManager.Instance;
             CaptureInteractions(snapshot, screens, available);
+            CaptureInspection(snapshot, screens, available);
             var confirmation = GenericConfirmationUIManager.Instance;
             AddScreen("generic_confirmation", confirmation?.panel, screens, available);
             if (confirmation != null && confirmation.panel.activeInHierarchy)
@@ -262,6 +263,7 @@ namespace PSAI
 
         private JObject? InspectMidgame(string target, string detail, JObject args)
         {
+            if (detail == "appraisal") return InspectAppraisal(target);
             if (detail == "operations" || detail == "capacity" || detail == "liquid") return InspectInteractions(target, detail);
             if (detail == "image")
             {

@@ -15,6 +15,8 @@ namespace PSAI
                 ["day"] = StoreStation.Instance.dayCounter, ["last_outing_day"] = store.lastAfterhourOutingDay,
                 ["already_went_out_tonight"] = store.lastAfterhourOutingDay == StoreStation.Instance.dayCounter,
                 ["visits_remaining"] = store.visitLeftTonight, ["can_depart_now"] = CanStartOuting(door),
+                ["unlocked"] = store.isAfterhoursIntroduced, ["development_override"] = store.devMode,
+                ["blocked_reasons"] = OutingBlockers(door),
                 ["prompt"] = door == null ? null : door.GetTooltip(),
                 ["source"] = "original_outing_state_and_door_conditions"
             };
@@ -173,17 +175,35 @@ namespace PSAI
         }
 
         private static bool CanStartOuting(StoreDoor? door)
+            => OutingBlockers(door).Count == 0;
+
+        private static JArray OutingBlockers(StoreDoor? door)
         {
             var store = PlayerStore.Instance;
             var map = MapUIManager.Instance;
             var entry = EmporiumEntry.Instance;
-            if (door == null || !door.isActiveAndEnabled || map == null || map.IsOutside || map.IsInTransit ||
-                TransitUI.IsOpen || (map.confirmationPanel != null && map.confirmationPanel.activeInHierarchy) ||
-                (int) store.storeState != 0 || (entry.responseWindow?.IsVisible() ?? false) ||
-                (entry.responseWindowClosable?.IsVisible() ?? false)) return false;
-            return store.devMode || (!HealthData.IsSeriouslyWounded() &&
-                !StoreStation.Instance.storeEventManager.IsEventActive("crackdown") &&
-                !StartingPerkContent.IsAgoraphobiaResting() && store.isAfterhoursIntroduced && store.visitLeftTonight > 0);
+            var reasons = new JArray();
+            if (door == null || !door.isActiveAndEnabled) reasons.Add("店门当前不可用");
+            if (map == null) reasons.Add("地图尚未就绪");
+            else
+            {
+                if (map.IsOutside) reasons.Add("当前已在店外");
+                if (map.IsInTransit) reasons.Add("当前正在移动");
+                if (map.confirmationPanel != null && map.confirmationPanel.activeInHierarchy) reasons.Add("正在确认出发");
+            }
+            if (TransitUI.IsOpen) reasons.Add("当前正在转场");
+            if ((int) store.storeState != 0) reasons.Add("需要先结束营业");
+            if ((entry.responseWindow?.IsVisible() ?? false) || (entry.responseWindowClosable?.IsVisible() ?? false))
+                reasons.Add("需要先处理当前选择窗口");
+            if (!store.devMode)
+            {
+                if (!store.isAfterhoursIntroduced) reasons.Add("外出尚未解锁");
+                if (store.visitLeftTonight <= 0) reasons.Add("当晚外出次数已用尽");
+                if (HealthData.IsSeriouslyWounded()) reasons.Add("伤势过重");
+                if (StoreStation.Instance.storeEventManager.IsEventActive("crackdown")) reasons.Add("封锁事件阻止外出");
+                if (StartingPerkContent.IsAgoraphobiaResting()) reasons.Add("当前特性需要休息");
+            }
+            return reasons;
         }
 
         private void AddMountedBackpack(GameItem item, JArray stock)

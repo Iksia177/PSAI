@@ -11,7 +11,7 @@ const guidanceSchema = z.object({
 });
 
 export const defaultGuidance = {
-  version: '6',
+  version: '7',
   rules: [
     { id: 'read-effects', priority: 0, instruction: '移动、拆卸、升级或使用物品前，先读取相关物品、目标与设施的 tooltip 标签、效果和操作条件。根据 use_conditions 及原版提示选择工具和材料。' },
     { id: 'window-discipline', priority: 1, instruction: '优先只保留当前存取或使用所需的两个可关闭容器窗口。同一对容器可连续操作，完成或失败后关闭相关窗口。嵌套操作保留必要父窗口，结束时逆序关闭。' },
@@ -20,7 +20,7 @@ export const defaultGuidance = {
     { id: 'discover-operations', priority: 4, instruction: '优先使用结构化接口和文字发现操作。读取 tooltip、operations、use_conditions 和机器控件，自行学习加工与生产流程，按执行后的实际状态核对结果。图像仅在结构化信息和文字不足、有可疑线索或用户要求时按需查询。' },
     { id: 'morning-machines', priority: 5, instruction: '起床后优先检查机器，收集并处理产物，补充合适投入物。结合可见电量、兼容性、运行状态和剩余资源，优先换上电量更多的适用电池，保留必要供电。' },
     { id: 'read-daily-report', priority: 6, instruction: '每日先读取日报的夜间结果、事件线索、服务和状态信息，结合当前任务安排操作，读取完成后关闭报告。' },
-    { id: 'counter-cleanup', priority: 7, instruction: '每次开店后和夜间回店后，优先检查交易台与柜台，把确认属于自己且无“未拥有”标识的物品收回主库存。先读 tooltip 或所有权字段，避免移走顾客物品。空间不足时按容器用途暂存，正在处理的交易或任务物品按当前目标安排。' },
+    { id: 'counter-cleanup', priority: 7, instruction: '每次交易前、成交或取消后，以及开店后和夜间回店后，优先检查 counter（前柜台）与 back_counter（交易备货台），把确认属于自己且无“未拥有”标识的遗留物品收回主库存。先读 tooltip 或 owned 字段，所有权不明时先查询，避免移走顾客物品。关门不代表台面物品已收入库存。交易前先整理再备货，交易过程中保留正在报价、加工或提交的物品，结束后再收尾。空间不足时按容器用途暂存。' },
     { id: 'user-progress-reports', priority: 8, instruction: '推荐每天开店前（读取日报、整理库存与机器后）、每次确认实际成交后、夜间外出回店后，向用户简短回报已完成的操作、实际结果、选择理由和接下来打算做的事，方便用户及时指导。成交以现金、归属及原版结果复核，不把处理函数返回直接当作成交。用户可以调整回报频率；日常回报无需等待用户批准后续已授权操作。' },
     { id: 'trade-context', priority: 9, instruction: '交易先读 customer_context、dialogue.full_text、trade 和当前窗口文字。现金出售候选从 trade.sell_candidates 或已观察库存中的实际物品选择。以物易物时读取 trade.barter 的条件、候选、报价组及换得物，候选匹配单项条件不代表完整交换已满足，结合 conditions_met 与原版按钮判断。使用自定义回调且候选判断未知时，按当前面板与标签核对，不把未知当作拒收。备货放入 trade.offer_inventory（back_counter，交易备货台），再核对原版报价。counter 是前柜台，物品移动成功也不等于已加入报价。需求、预算或选择条件不满足时读取原版拒绝信息。' },
     { id: 'file-documents', priority: 10, instruction: '优先将已归自己所有、暂时不用的文件放入文档柜。' },
@@ -28,7 +28,7 @@ export const defaultGuidance = {
     { id: 'store-idle-items', priority: 20, instruction: '优先将闲置自有物品整理至按用途适合且能够接收的容器，优先利用储物柜。正在交易、展示或生产使用的物品保留相应用途，先为机器运行计划保留投入物，缺少合适容器或容量时自行选择临时位置。' },
     { id: 'run-machines', priority: 30, instruction: '优先使具备运行条件的机器正常运转，结合可见说明、现有材料与当前目标，自行选择投入物及投入顺序，并安排正常运行所需的材料和供电。' },
     { id: 'night-electricity', priority: 40, instruction: '按实际运行需求建议夜间用电。仅在计划运行的设备需要夜间外部供电时考虑订电，结合当前可见的供电、储能与消耗条件判断。信息不足时先查询设备，避免仅按持有电器作决定。' },
-    { id: 'night-outing', priority: 45, instruction: '按原版 outing.visits_remaining、can_depart_now 与门的提示判断外出机会，条件允许时每晚优先考虑出门，结合当前目标、租金储备、时间和可见风险选择活动。外出选包优先选择当前允许携带、绝对总容量最大的背包，比较 capacity.total_cells，不以剩余空间代替总容量，同容量沿用列表顺序。' },
+    { id: 'night-outing', priority: 45, instruction: '先检查 outing.unlocked、blocked_reasons、visits_remaining、can_depart_now 与门的提示。尚未解锁时跳过外出；条件不满足时按原因处理或等待正常进展，不反复尝试。条件允许时每晚优先考虑出门，结合当前目标、租金储备、时间和可见风险选择活动。外出选包优先选择当前允许携带、绝对总容量最大的背包，比较 capacity.total_cells，不以剩余空间代替总容量，同容量沿用列表顺序。' },
     { id: 'upgrade-review', priority: 50, instruction: '默认约每4个游戏日检查王德尔加点，可结合事件调整为3至5日。参考当前存档 save_context.upgrade_days_since_review 和购买记录，结合已有构筑与前置条件，约按1个主动构筑项目、2个被动项目交替考虑。默认仅使用专用货币，明确决定使用现金补差时传 allow_cash=true。' },
     { id: 'accept-events', priority: 60, instruction: 'NPC事件在资金、物品与前置条件满足并符合当前目标时，优先接受、购买或提交。读取完整条件与后续确认，资源冲突时结合用户目标自行取舍。' },
     { id: 'wanted-evidence', priority: 70, instruction: '优先读取 customer_identity 的独立通缉字段及名单关联，并结合文字线索判断举报依据。区分通缉犯与普通盗窃、出售赃物或违禁品等情况，使用 report_customer 时填写 evidence 和信息来源。结构化身份由用户授权读取。只有仍存在有意义的疑点且文字不足时才按需取图。' },

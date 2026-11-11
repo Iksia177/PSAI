@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { defaultGuidance, loadGuidance } from '../src/client/guidance.ts';
 
@@ -8,9 +8,15 @@ test('default guidance is ordered, advisory, and defers to current user instruct
   const guidance = await loadGuidance('');
   assert.equal(guidance.mode, 'advisory');
   assert.equal(guidance.user_instructions_take_precedence, true);
-  assert.equal(guidance.version, '6');
+  assert.equal(guidance.version, '7');
   assert.deepEqual(guidance.rules.map(rule => rule.id), ['read-effects', 'window-discipline', 'showcase-purpose', 'rent-and-property', 'discover-operations', 'morning-machines', 'read-daily-report', 'counter-cleanup', 'user-progress-reports', 'trade-context', 'file-documents', 'contact-cards', 'store-idle-items', 'run-machines', 'night-electricity', 'night-outing', 'upgrade-review', 'accept-events', 'wanted-evidence']);
   assert.deepEqual(guidance.rules, defaultGuidance.rules);
+});
+
+test('distributed preferences stay consistent with CLI and MCP defaults', async () => {
+  const example = JSON.parse(await readFile(new URL('../psai.preferences.example.json', import.meta.url), 'utf8'));
+  assert.deepEqual(example.rules, defaultGuidance.rules);
+  assert.equal(example.version, 'local-' + defaultGuidance.version);
 });
 
 test('local preferences replace defaults and persist across independent loads', async () => {

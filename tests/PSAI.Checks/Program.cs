@@ -24,3 +24,14 @@ if (InventoryCapacity.CountUsableCells(3, 2, (_, _) => 0) != 6) throw new Except
 if (InventoryCapacity.CountUsableCells(3, 2, (x, y) => (byte)(x == 1 && y == 1 ? 1 : 0)) != 5) throw new Exception("Inventory wall counted as capacity");
 if (InventoryCapacity.CountUsableCells(3, 2, (_, _) => 1) != 0) throw new Exception("Blocked inventory capacity failed");
 Console.WriteLine("Inventory capacity checks passed (3 cases).");
+if (AppraisalInput.Format(16777217, 0) != "16777217") throw new Exception("Appraisal lost integer precision");
+if (AppraisalInput.Format(int.MaxValue, 0) != "2147483647") throw new Exception("Appraisal upper bound failed");
+if (AppraisalInput.Format(int.MinValue, 0) != "-2147483648") throw new Exception("Appraisal lower bound failed");
+if (AppraisalInput.Format(0, 1) != "0") throw new Exception("Zero appraisal failed");
+Reject(() => AppraisalInput.Format(2147483648d, 0), "invalid_appraisal_value");
+Reject(() => AppraisalInput.Format(-2147483649d, 0), "invalid_appraisal_value");
+Reject(() => AppraisalInput.Format(double.NaN, 0), "invalid_appraisal_value");
+Reject(() => AppraisalInput.Format(double.PositiveInfinity, 0), "invalid_appraisal_value");
+Reject(() => AppraisalInput.Format(12.5, 0), "appraisal_value_must_be_integer");
+Reject(() => AppraisalInput.Format(123, 2), "appraisal_value_too_long");
+Console.WriteLine("Appraisal input checks passed (10 cases).");
