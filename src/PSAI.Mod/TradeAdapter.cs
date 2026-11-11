@@ -123,6 +123,9 @@ namespace PSAI
             if (open)
             {
                 frame = ui!.uiObject.GetComponentInChildren<NegotiationTabletFrame>(false);
+                if (frame != null && snapshot["customer_context"] is JObject context &&
+                    string.IsNullOrEmpty(context.Value<string>("name")))
+                    context["name"] = FullText(frame.clientName);
                 foreach (var row in ui.uiObject.GetComponentsInChildren<TabletListRow>(false))
                 {
                     var labels = row.GetComponentsInChildren<TextMeshProUGUI>(false).Select(FullText).Where(text => text.Length > 0).ToArray();
