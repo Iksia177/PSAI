@@ -61,7 +61,11 @@ try {
         @('NegociationUIManager', 'GetNotBuyingReason', 1),
         @('StoreClient', 'GetBudget', 0),
         @('StoreClient', 'IsClientBuyingThisItem', 1),
-        @('StoreClient', 'HasBudgetLeftToBuy', 1)
+        @('StoreClient', 'HasBudgetLeftToBuy', 1),
+        @('BarterCondition', 'IsItemValid', 1),
+        @('BarterOffer', 'IsBarterAcceptable', 0),
+        @('BarterOffer', 'OfferSetCount', 0),
+        @('BarterOffer', 'UseCondition', 0)
     )
     $checks = @($required | ForEach-Object {
         $typeName, $methodName, $parameterCount = $_

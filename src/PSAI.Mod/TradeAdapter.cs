@@ -47,11 +47,15 @@ namespace PSAI
             {
                 firearmClient = current;
                 firearmTarget = current == null ? "" : "customer-" + (++nextFirearmTarget);
+                observedCustomerName = "";
             }
             var client = current?.GetClientBlueprint();
+            var displayedName = FullText(DialogUIManager.Instance.clientNameTMP);
+            if (current != null && store.isClientArrived && displayedName.Length > 0)
+                observedCustomerName = displayedName;
             snapshot["customer_context"] = client == null ? null : new JObject {
                 ["id"] = firearmTarget, ["game_id"] = client.identifier,
-                ["name"] = store.isClientArrived ? FullText(DialogUIManager.Instance.clientNameTMP) : "",
+                ["name"] = store.isClientArrived ? observedCustomerName : "",
                 ["arrived"] = store.isClientArrived,
                 ["wanted"] = client.isWanted, ["wanted_poster_id"] = client.wantedPosterId,
                 ["stealth_wanted"] = client.isStealthWanted,
@@ -80,16 +84,18 @@ namespace PSAI
             if (client == null || !store.isClientArrived) { snapshot["trade"] = null; return; }
             var ui = NegociationUIManager.Instance;
             var open = ui != null && ui.IsOpen;
+            var barter = client.clientIntent.ToString() == "BARTER" ? client.barterOffer : null;
+            var barterConditions = barter != null && barter.UseCondition() ? barter.conditions.ToArray() : null;
             var texts = new JArray();
             foreach (var screen in screens.OfType<JObject>().Where(screen =>
-                screen.Value<string>("id") == "trade" || screen.Value<string>("id") == "bargain" ||
-                screen.Value<string>("id") == "generic_confirmation"))
+                screen.Value<string>("id") == "trade" || screen.Value<string>("id") == "bargain"))
             {
                 screen["customer_id"] = firearmTarget;
                 texts.Add(screen.DeepClone());
             }
             var candidates = new JArray();
             var backItems = new JArray();
+            var offeredGoods = new JArray();
             var sellable = ui == null ? new System.Collections.Generic.HashSet<GameItem>() :
                 new System.Collections.Generic.HashSet<GameItem>(ui.GetSellableItem());
             var seen = new System.Collections.Generic.HashSet<string>();
@@ -110,13 +116,27 @@ namespace PSAI
                 view["budget_sufficient"] = matches && (!client.useClientBudget || client.HasBudgetLeftToBuy(item));
                 view["in_sell_offer"] = sellable.Contains(item);
                 view["negotiated_value"] = item.GetNegociatedValue();
+                if (barter != null)
+                {
+                    JArray? matchingConditions = null;
+                    if (barterConditions != null)
+                    {
+                        matchingConditions = new JArray();
+                        for (var index = 0; index < barterConditions.Length; index++)
+                            if (owned && barterConditions[index].IsItemValid(item)) matchingConditions.Add(index);
+                    }
+                    view["barter_condition_indices"] = matchingConditions;
+                    view["matches_demand"] = matchingConditions == null ? JValue.CreateNull() : new JValue(matchingConditions.Count > 0);
+                    view["budget_sufficient"] = null;
+                }
                 // This native explanation depends on the back counter and is only valid there.
                 if (inventory.Value<string>("id") == "back_counter")
                 {
-                    view["refusal_reason"] = owned && ui != null ? ui.GetNotBuyingReason(item) : "";
+                    view["refusal_reason"] = owned && ui != null && barter == null ? ui.GetNotBuyingReason(item) : null;
                     backItems.Add(view.DeepClone());
                 }
                 if (owned) candidates.Add(view);
+                else offeredGoods.Add(view);
             }
             var rows = new JArray();
             NegotiationTabletFrame? frame = null;
@@ -125,7 +145,10 @@ namespace PSAI
                 frame = ui!.uiObject.GetComponentInChildren<NegotiationTabletFrame>(false);
                 if (frame != null && snapshot["customer_context"] is JObject context &&
                     string.IsNullOrEmpty(context.Value<string>("name")))
-                    context["name"] = FullText(frame.clientName);
+                {
+                    observedCustomerName = FullText(frame.clientName);
+                    context["name"] = observedCustomerName;
+                }
                 foreach (var row in ui.uiObject.GetComponentsInChildren<TabletListRow>(false))
                 {
                     var labels = row.GetComponentsInChildren<TextMeshProUGUI>(false).Select(FullText).Where(text => text.Length > 0).ToArray();
@@ -156,7 +179,7 @@ namespace PSAI
                 ["budget_limited"] = client.useClientBudget,
                 ["offer_inventory"] = "back_counter", ["offer_inventory_name"] = InventoryName("back_counter", ""),
                 ["visible_owned_items"] = candidates,
-                ["sell_candidates"] = new JArray(candidates.OfType<JObject>().Where(item => item.Value<bool>("matches_demand") &&
+                ["sell_candidates"] = new JArray(candidates.OfType<JObject>().Where(item => barter == null && item.Value<bool>("matches_demand") &&
                     (item.Value<bool>("can_remove") || item.Value<bool>("in_sell_offer"))).Select(item => item.DeepClone())),
                 ["counter_items"] = backItems,
                 ["sell_offer_items"] = new JArray(backItems.OfType<JObject>().Where(item => item.Value<bool>("in_sell_offer")).Select(item => item.DeepClone())),
@@ -167,6 +190,23 @@ namespace PSAI
                     .Where(row => row.Value<bool>("enabled")).Select(row => row.Value<string>("action"))).Distinct()),
                 ["source"] = "visible_inventory_instances_and_original_trade_conditions"
             };
+            if (barter != null)
+            {
+                var barterCandidates = candidates.OfType<JObject>().Where(item => item.Value<bool?>("matches_demand") == true && item.Value<bool>("can_remove")).ToArray();
+                ((JObject) snapshot["trade"]!)["barter"] = new JObject {
+                    ["business_complete"] = client.isBusinessComplete,
+                    ["conditions_met"] = !client.isBusinessComplete && barter.IsBarterAcceptable(),
+                    ["selected_set"] = barter.currentSetIndex + 1, ["set_count"] = barter.OfferSetCount(),
+                    ["candidate_evaluation"] = barterConditions == null ? "requires_original_callback" : "original_per_item_conditions",
+                    ["candidates"] = new JArray(barterCandidates.Select(item => item.DeepClone())),
+                    ["receive_items"] = offeredGoods,
+                    ["conditions"] = barterConditions == null ? new JArray() : new JArray(barterConditions.Select((condition, index) => new JObject {
+                        ["index"] = index, ["description"] = condition.requiredDisplay,
+                        ["matching_visible_item_ids"] = new JArray(barterCandidates.Where(item => ((JArray) item["barter_condition_indices"]!).Values<int>().Contains(index)).Select(item => item["id"]!.DeepClone()))
+                    })),
+                    ["source"] = "original_barter_conditions_and_visible_items"
+                };
+            }
         }
     }
 }

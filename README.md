@@ -94,6 +94,8 @@ trade 返回当前顾客关联、原版意图、mode_text、需求文字、预�
 
 出售物品应放入 `trade.offer_inventory`，其值为 `back_counter`，中文名称为交易备货台。`counter` 是前柜台。移动后重新观察原版 sell_offer_items 与平板 rows，再使用当前动作完成交易。rows 包含原版物品行的选择动作、文字和选中状态；名称重复时 matching_item_ids 返回多个可能实例，item_id 为空，避免猜测实例对应关系。每次操作使用最新会话和 revision，动作结果仍需复核。
 
+以物易物读取 `trade.barter`，其中包含原版条件、候选、报价组、可见换得物和整体 conditions_met。候选通过原版 BarterCondition.IsItemValid 判断，可能只满足多项要求中的一项，最终仍核对完整条件和当前接受按钮。现金出售的 sell_candidates 与交换候选分别提供。自定义回调无法逐件判断时，matches_demand 为 null，按当前面板与标签继续判断；预算与现金拒收理由也不用于交换。普通信息弹窗在全局 screens 中读取，交易自己的确认文字随平板提供。
+
 每日报纸使用独立的 daily_news 屏幕，读取后执行 close_daily_news。它与晨间报告及日结报告分别读取、关闭。
 
 性能测量使用 `node scripts/Measure-Bridge.ts` 保存离线目录枚举对比。用户确认存档已载入后可用 `node scripts/Measure-Bridge.ts --live` 测量只读请求。设置 `PSAI_PROFILE=1` 时 CLI/MCP 回执附带 client_performance，包含端到端耗时与回执体积。原版桥接回执的 performance 提供快照耗时、生成次数、目录枚举耗时、文件数和处理请求数，status 也提供目录统计。诊断数据不参与状态 revision。离线代理数据与 Unity 实测分别报告。

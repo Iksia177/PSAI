@@ -103,7 +103,7 @@ namespace PSAI
                 ["features"] = new JArray("visible_tooltips", "targeted_item_use", "telephone", "upgrade_payment_guard", "afterhour", "visible_image_crops",
                     "response_choices", "contact_cards", "authorized_wanted_identity", "operation_discovery", "rent_obligations",
                     "outing_state", "firearm_actions", "visible_ownership", "scripted_dialogue",
-                    "customer_context", "structured_trade", "daily_news", "customer_queue", "request_timings")
+                    "customer_context", "structured_trade", "daily_news", "customer_queue", "request_timings", "barter_context")
             };
         }
 

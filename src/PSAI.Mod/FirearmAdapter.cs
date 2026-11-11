@@ -9,12 +9,14 @@ namespace PSAI
         private StoreClientInstance? firearmClient;
         private string firearmTarget = "";
         private long nextFirearmTarget;
+        private string observedCustomerName = "";
 
         private void ClearFirearm()
         {
             firearmClient = null;
             firearmTarget = "";
             nextFirearmTarget = 0;
+            observedCustomerName = "";
         }
 
         private void CaptureFirearm(JObject snapshot, JArray screens, JArray available)
