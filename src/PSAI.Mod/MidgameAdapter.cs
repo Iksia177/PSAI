@@ -52,7 +52,7 @@ namespace PSAI
             if (!IsBusy(store))
             {
                 var phoneObject = FindCached(ref cachedPhone);
-                if (phoneObject != null && phoneObject.gameObject.activeInHierarchy)
+                if (phoneObject != null && phoneObject.isActiveAndEnabled && phoneObject.gameObject.activeInHierarchy)
                     AddAction(available, "open_phone", "Pick up the telephone", phoneObject.OnClick);
             }
             CapturePhoneDialogue(snapshot, available);

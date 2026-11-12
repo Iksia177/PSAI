@@ -7,6 +7,7 @@ import { promisify } from 'node:util';
 import { setTimeout as delay } from 'node:timers/promises';
 import { BridgeClient, bridgeErrorOutput, type Request } from '../src/client/bridge.ts';
 import { loadGuidance } from '../src/client/guidance.ts';
+import { contextualGuidance } from '../src/client/contextual-guidance.ts';
 
 async function fixture() {
   const root = resolve('.cache/tests');
@@ -37,6 +38,19 @@ function peer(directory: string, responseData = (request: Request): unknown => (
   })();
   return { seen, stop: async () => { closed = true; await task; } };
 }
+
+test('observe derives guidance from its returned snapshot instead of status or previous observations', async () => {
+  const { directory, client } = await fixture();
+  let unlocked = false;
+  const server = peer(directory, () => ({ revision: 1, outing: { unlocked, can_depart_now: unlocked } }));
+  try {
+    const first = await client.send('observe');
+    assert.equal((first.guidance as { availability: { afterhours: { state: string } } }).availability.afterhours.state, 'locked');
+    unlocked = true;
+    const second = await client.send('observe');
+    assert.equal((second.guidance as { availability: { afterhours: { state: string } } }).availability.afterhours.state, 'available');
+  } finally { await server.stop(); }
+});
 
 test('round trip preserves request identity and caller arguments', async () => {
   const { directory, client } = await fixture();
@@ -150,7 +164,7 @@ test('CLI executes through its public entry point and emits JSON', async () => {
       { env: { ...process.env, PSAI_PREFERENCES_FILE: preferences } });
     assert.equal(JSON.parse(stdout).status, 'completed');
     assert.equal(JSON.parse(stdout).guidance.mode, 'advisory');
-    assert.deepEqual(JSON.parse(stdout).guidance, await loadGuidance(preferences));
+    assert.deepEqual(JSON.parse(stdout).guidance, contextualGuidance(await loadGuidance(preferences), JSON.parse(stdout).data));
   } finally { await game.stop(); }
 });
 
@@ -198,7 +212,7 @@ test('MCP stdio initializes, lists all six tools and calls bridge status', async
     const response = await wait(3);
     assert.equal(JSON.parse(response.result.content![0]!.text!).session_id, 'session-a');
     assert.equal(JSON.parse(response.result.content![0]!.text!).guidance.mode, 'advisory');
-    assert.deepEqual(JSON.parse(response.result.content![0]!.text!).guidance, await loadGuidance(preferences));
+    assert.deepEqual(JSON.parse(response.result.content![0]!.text!).guidance, contextualGuidance(await loadGuidance(preferences)));
     send({ jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'psai_act', arguments: {
       action: 'open_panel', target: 'poster_stash', expected_revision: 1, session_id: 'session-a',
     } } });

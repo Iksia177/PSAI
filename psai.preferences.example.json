@@ -1,6 +1,11 @@
 {
-  "version": "local-8",
+  "version": "local-9",
   "rules": [
+    {
+      "id": "progression-first",
+      "priority": 0,
+      "instruction": "先读当前 observe 的 progression、guidance.availability、actions 和对白。status.features 表示模组支持能力，不表示存档已解锁；guidance.rules 是本次适用建议，deferred_rules 暂缓执行。教程或早期存档优先完成当前可用对白与营业，未开放或暂时受限的功能正常跳过，不循环尝试，不因此要求修复存档。状态未知时先观察和核对原版提示，动作与实际可见条件持续冲突时报告接口问题。当前用户指令优先。"
+    },
     {
       "id": "read-effects",
       "priority": 0,

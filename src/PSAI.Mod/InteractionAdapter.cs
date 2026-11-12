@@ -11,6 +11,17 @@ namespace PSAI
         {
             var store = PlayerStore.Instance;
             var door = FindCached(ref cachedDoor);
+            var phone = FindCached(ref cachedPhone);
+            snapshot["progression"] = new JObject {
+                ["source"] = "original_progress_flags",
+                ["afterhours_introduced"] = store.isAfterhoursIntroduced,
+                ["network_introduced"] = store.isNetworkIntroduced,
+                ["display_case_introduced"] = store.isDisplayCaseIntroduced,
+                ["visual_inspection_introduced"] = store.isVisualInspectionIntroduced,
+                ["appraisal_introduced"] = store.isAppraisalIntroduced,
+                ["shooting_unlocked"] = store.isShootingUnlocked,
+                ["phone_present"] = phone != null && phone.isActiveAndEnabled && phone.gameObject.activeInHierarchy
+            };
             snapshot["outing"] = new JObject {
                 ["day"] = StoreStation.Instance.dayCounter, ["last_outing_day"] = store.lastAfterhourOutingDay,
                 ["already_went_out_tonight"] = store.lastAfterhourOutingDay == StoreStation.Instance.dayCounter,

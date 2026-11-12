@@ -11,8 +11,9 @@ const guidanceSchema = z.object({
 });
 
 export const defaultGuidance = {
-  version: '8',
+  version: '9',
   rules: [
+    { id: 'progression-first', priority: 0, instruction: '先读当前 observe 的 progression、guidance.availability、actions 和对白。status.features 表示模组支持能力，不表示存档已解锁；guidance.rules 是本次适用建议，deferred_rules 暂缓执行。教程或早期存档优先完成当前可用对白与营业，未开放或暂时受限的功能正常跳过，不循环尝试，不因此要求修复存档。状态未知时先观察和核对原版提示，动作与实际可见条件持续冲突时报告接口问题。当前用户指令优先。' },
     { id: 'read-effects', priority: 0, instruction: '移动、拆卸、升级或使用物品前，先读取相关物品、目标与设施的 tooltip 标签、效果和操作条件。根据 use_conditions 及原版提示选择工具和材料。' },
     { id: 'window-discipline', priority: 1, instruction: '优先只保留当前存取或使用所需的两个可关闭容器窗口。同一对容器可连续操作，完成或失败后关闭相关窗口。嵌套操作保留必要父窗口，结束时逆序关闭。' },
     { id: 'showcase-purpose', priority: 2, instruction: '展示柜具有影响客户群体等经营功能，优先保留其中物品用于陈列，交易先使用库存及其他自有储备。需要调整陈列时先读取客户群体与效果，再结合经营目的决定。普通收纳优先选择用途合适的储物容器。' },

@@ -2,7 +2,7 @@
 
 Probably Stolen Agent Interface，为 Steam 版《深空当铺：可能是偷的》提供 agent 游玩接口。游戏侧使用原生模组，agent 侧使用共用的 CLI / MCP 工具，通过游戏自有数据目录交换 JSON。
 
-当前版本为 v0.1.0，适配原版游戏 0.46D、VERSION 100-Rev13（Steam build 26525552）。默认游玩指导为第 8 版，实际版本及规则以 `status` 返回的 `guidance` 为准。
+当前版本为 v0.1.0，适配原版游戏 0.46D、VERSION 100-Rev13（Steam build 26525552）。默认游玩指导为第 9 版，实际版本及规则以 `status` 返回的 `guidance` 为准。
 
 ## 安装与首次使用
 
@@ -33,7 +33,7 @@ MCP 使用本地 stdio 服务：程序为 `node`，参数为下载目录中 `src
 
 ## 游玩与默认指导
 
-先读 `status` / `observe` 中的 `guidance`、当前顾客、对白、交易和可用动作。默认指导是可调整的建议，用户当前指令优先；它包含经营、收纳、机器、交租、夜间活动和操作回报等偏好。
+先读 `status`，再读取 `observe` 中的 `guidance`、当前顾客、对白、交易和可用动作。`status` 的指导等待当前观察；`observe.guidance.rules` 随本次状态筛选，`deferred_rules` 给出暂缓原因，`availability` 区分未解锁、当前受限和未知。`status.features` 只表示模组实现能力，不代表存档已开放。未开放功能正常跳过，优先处理当前对白与可用营业，不将入口缺失直接判断为存档问题。默认指导是可调整的建议，用户当前指令优先；它包含经营、收纳、机器、交租、夜间活动和操作回报等偏好。
 
 - `counter` 是门外前柜台，`back_counter` 是店内交易备货台，`afterhour_ground` 是外出地点地面。优先在打烊、外出之前及交易前后，按 `owned` 或“未拥有”提示将自有遗留物移回 `inventory` 或合适容器。出门会清除 `counter` 上的物品，选中的背包也应先收回；当前报价、加工或提交物品在交易结束后收尾。窗口未列出不代表台面已空。
 - 出售备货使用 `trade.offer_inventory`，正常值为 `back_counter`。备货后核对原版报价与 `trade.rows`，移动成功本身不代表成交。普通出售与以物易物分别读取其结构化条件。
