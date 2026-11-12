@@ -2,7 +2,7 @@
 
 **Probably Stolen Agent Interface**，为 Steam 版《深空当铺：可能是偷的》提供 AI agent 游玩接口。通过游戏侧原生模组和 agent 侧 CLI / MCP 工具，让 agent 读取游戏状态、作出经营决策并执行正常游戏操作。
 
-当前版本：**0.9.0**。项目正在接近“让 agent 能够完整玩上游戏”的初步目标，仍在持续测试与完善。
+当前版本：**0.9.1**。项目正在接近“让 agent 能够完整玩上游戏”的初步目标，仍在持续测试与完善。
 
 本项目采用 **vibe coding** 开发：由人提出想法、观察游玩并反馈问题，与 AI 协作实现和迭代。
 
@@ -131,4 +131,4 @@ CLI 提供 `status`、`observe`、`inspect`、`actions`、`act`、`result` 六�
 
 如需覆盖默认偏好，复制 `psai.preferences.example.json` 为 `psai.preferences.local.json`，修改完整规则列表，并设置环境变量 `PSAI_PREFERENCES_FILE` 为该文件的绝对路径。读取失败时回退到默认规则并返回说明。本机配置、游戏程序集、存档、通信文件及构建产物不随仓库分发。
 
-[版本说明](docs/RELEASE-v0.9.0.md) · [接口说明](docs/INTERFACE.md) · [开发说明](docs/DEVELOPMENT.md)
+[版本说明](docs/RELEASE-v0.9.1.md) · [接口说明](docs/INTERFACE.md) · [开发说明](docs/DEVELOPMENT.md)

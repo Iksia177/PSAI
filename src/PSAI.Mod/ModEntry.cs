@@ -11,7 +11,7 @@ namespace PSAI
         public void Init(ModManifest manifest)
         {
             log = new ModLog(manifest);
-            log.Log("PSAI initialized (0.9.0).");
+            log.Log("PSAI initialized (0.9.1).");
         }
 
         public void OnEnable()
