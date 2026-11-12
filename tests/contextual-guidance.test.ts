@@ -134,3 +134,18 @@ test('a confirmation remains ahead of a graphical guide without visible body tex
   assert.deepEqual(result.focus.primary_action_ids, ['confirm_prompt']);
   assert.ok(result.rules.some(rule => rule.id === 'read-open-documents'));
 });
+test('tool result windows take focus and their enabled controls are delivered', async () => {
+  const defaults = await loadGuidance('');
+  const result = contextualGuidance(defaults, {
+    attention: { items: [{ screen_id: 'plant_analyser-1', kind: 'tool_result', requires_response: true,
+      controls: [{ action: 'close_plant_analyser', enabled: true }, { action: 'unavailable_match', enabled: false }] }] },
+    customer_interaction: { kind: 'trade', primary_action_ids: ['open_trade'] },
+    actions: [{ action: 'open_trade', enabled: true }],
+  });
+  assert.equal(result.focus.kind, 'respond_to_prompt');
+  assert.deepEqual(result.focus.primary_action_ids, ['close_plant_analyser']);
+  assert.match(result.focus.instruction, /tool_results/);
+  assert.ok(result.rules.some(rule => rule.id === 'read-tool-results'));
+  const closed = contextualGuidance(defaults, { attention: { items: [] } });
+  assert.ok(!closed.rules.some(rule => rule.id === 'read-tool-results'));
+});

@@ -9,5 +9,6 @@
     <Compile Include="../../src/PSAI.Mod/InventoryCapacity.cs" Link="InventoryCapacity.cs" />
     <Compile Include="../../src/PSAI.Mod/AppraisalInput.cs" Link="AppraisalInput.cs" />
     <Compile Include="../../src/PSAI.Mod/StorageCatalogPolicy.cs" Link="StorageCatalogPolicy.cs" />
+    <Compile Include="../../src/PSAI.Mod/ToolControlInput.cs" Link="ToolControlInput.cs" />
   </ItemGroup>
 </Project>

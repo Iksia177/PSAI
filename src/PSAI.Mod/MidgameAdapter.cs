@@ -17,7 +17,7 @@ namespace PSAI
         private readonly Dictionary<string, object> imageContexts = new Dictionary<string, object>();
 
         private void ClearMidgame() { ClearMidgameViews(); documentContexts.Clear(); inspectionItem = null; inspectionImageContext = null; ClearFirearm(); GameImages.Reset(); }
-        private void ClearMidgameViews() { parameterActions.Clear(); visibleTooltips.Clear(); imageTargets.Clear(); imageContexts.Clear(); inspectionView = null; documentViews.Clear(); }
+        private void ClearMidgameViews() { parameterActions.Clear(); visibleTooltips.Clear(); imageTargets.Clear(); imageContexts.Clear(); inspectionView = null; documentViews.Clear(); toolResultViews.Clear(); }
 
         private void CaptureMidgame(JObject snapshot, JArray screens, JArray available, JArray stock)
         {
@@ -25,6 +25,7 @@ namespace PSAI
             var map = MapUIManager.Instance;
             CaptureInteractions(snapshot, screens, available);
             CaptureInspection(snapshot, screens, available);
+            CaptureToolResults(snapshot, screens, available);
             CapturePromptWindows(screens, available);
             snapshot["save_context"] = new JObject { ["slot"] = store.saveSlotId, ["run"] = store.runID,
                 ["upgrade_days_since_review"] = store.daySinceLastBrowseUpgrade,
@@ -258,6 +259,7 @@ namespace PSAI
         {
             if (detail == "document") return InspectDocument(target);
             if (detail == "appraisal") return InspectAppraisal(target);
+            if (detail == "tool_result") return InspectToolResult(target);
             if (detail == "operations" || detail == "capacity" || detail == "liquid") return InspectInteractions(target, detail);
             if (detail == "image")
             {

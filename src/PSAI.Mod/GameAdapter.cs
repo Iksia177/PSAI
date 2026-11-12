@@ -215,6 +215,7 @@ namespace PSAI
                     option["enabled"] = false;
             snapshot["actions"] = available;
             CaptureCustomerInteraction(snapshot, screens, available);
+            PublishToolResults(snapshot, available);
             snapshot["attention"] = CaptureAttention(screens, available);
             foreach (var stale in itemIds.Keys.Where(item => !items.ContainsValue(item)).ToArray()) itemIds.Remove(stale);
             return snapshot;

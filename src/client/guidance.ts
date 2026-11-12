@@ -11,8 +11,9 @@ const guidanceSchema = z.object({
 });
 
 export const defaultGuidance = {
-  version: '13',
+  version: '14',
   rules: [
+    { id: 'read-tool-results', priority: 0, instruction: '使用检测器、试纸或植物分析器后，先读 observe.tool_results，按其中 id 使用 inspect detail=tool_result 查看检测结果、原标签、被测物和 controls。匹配标签与质疑使用当前启用的原版按钮；标签机选择是改写展示标签，不等于检测，也可能与真实品质不符。按 fields 的 options 用 value 传零起始选项编号；名称标签用 text。阅读或操作结束后使用返回的 close_* 动作和 target 关闭窗口。基因扫描器使用 toggle_item 开关，开启后重新 inspect tooltip 读取种子等物品的扩展说明。' },
     { id: 'prompt-response', priority: 0, instruction: '每次观察或动作后先检查回执顶层 attention 和 guidance.focus。requires_response=true 的确认或设置窗口应先阅读内容并选择当前 controls 中启用的动作，再重新观察确认窗口消失或状态已推进；若 busy=true 或控件全部禁用，先等待并重新观察，不循环调用。确认可能消费、提交或推进剧情，不要自动点确定。设置窗口优先使用原版关闭按钮或对应 close_* 动作，不为关闭而改动设置。tutorial_hint 通常是说明或操作提示，按内容完成原版步骤；没有关闭动作时继续相应任务，不调用统一关闭教程。blocks_gameplay=null 表示尚不确定是否阻塞，不能把普通提示一律当作游戏卡死。' },
     { id: 'progression-first', priority: 0, instruction: '先读当前 observe 的 progression、guidance.availability、actions 和对白。status.features 表示模组支持能力，不表示存档已解锁；guidance.rules 是本次适用建议，deferred_rules 暂缓执行。教程或早期存档优先完成当前可用对白与营业，未开放或暂时受限的功能正常跳过，不循环尝试，不因此要求修复存档。状态未知时先观察和核对原版提示，动作与实际可见条件持续冲突时报告接口问题。当前用户指令优先。' },
     { id: 'read-effects', priority: 0, instruction: '移动、拆卸、升级或使用物品前，先读取相关物品、目标与设施的 tooltip 标签、效果和操作条件。根据 use_conditions 及原版提示选择工具和材料。' },

@@ -277,6 +277,11 @@ test('MCP stdio initializes, lists all six tools and calls bridge status', async
     } } });
     assert.deepEqual(JSON.parse((await wait(9)).result.content![0]!.text!).data.received,
       { action: 'slider-item-1', value: 0.5 });
+    send({ jsonrpc: '2.0', id: 11, method: 'tools/call', params: { name: 'psai_act', arguments: {
+      action: 'set_item_label_text', target: 'name_editor-1', text: '备用水瓶', expected_revision: 1, session_id: 'session-a',
+    } } });
+    assert.deepEqual(JSON.parse((await wait(11)).result.content![0]!.text!).data.received,
+      { action: 'set_item_label_text', target: 'name_editor-1', text: '备用水瓶' });
     await writeFile(join(directory, 'status.json'), JSON.stringify({ ...status, ready: false, updated_at: new Date().toISOString() }));
     send({ jsonrpc: '2.0', id: 10, method: 'tools/call', params: { name: 'psai_observe', arguments: {} } });
     const recovery = JSON.parse((await wait(10)).result.content![0]!.text!);

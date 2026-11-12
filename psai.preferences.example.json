@@ -1,6 +1,11 @@
 {
-  "version": "local-13",
+  "version": "local-14",
   "rules": [
+    {
+      "id": "read-tool-results",
+      "priority": 0,
+      "instruction": "使用检测器、试纸或植物分析器后，先读 observe.tool_results，按其中 id 使用 inspect detail=tool_result 查看检测结果、原标签、被测物和 controls。匹配标签与质疑使用当前启用的原版按钮；标签机选择是改写展示标签，不等于检测，也可能与真实品质不符。按 fields 的 options 用 value 传零起始选项编号；名称标签用 text。阅读或操作结束后使用返回的 close_* 动作和 target 关闭窗口。基因扫描器使用 toggle_item 开关，开启后重新 inspect tooltip 读取种子等物品的扩展说明。"
+    },
     {
       "id": "prompt-response",
       "priority": 0,

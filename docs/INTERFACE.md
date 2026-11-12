@@ -16,6 +16,22 @@ node src/client/cli.ts result <command_id> --session <session_id>
 
 动作必须携带最新会话和状态版本。`completed` 之后继续观察实际效果；`uncertain` 时先核对状态，再决定后续操作。对白的 busy 状态若同时提供可用推进动作，可按原版流程继续；转场和动画需等待。
 
+## 检测结果与标签
+
+`use_item_on` 沿用原版的合法目标与使用条件。使用水质检测器、水质试纸、化学检测器或植物分析器后，读取 `tool_results` 和 `attention`；结果窗口应先于日常接客操作处理。试纸使用后再次正常激活，也通过同一结果接口读取。
+
+每个结果提供 `id`、`kind`、当前完整可见 `text`、`controls`、`action_ids` 及被测物名称。仅被测物已在当前可见库存注册时提供 `item_id`；结果窗口不会让关闭容器里的物品变成可搬运目标。`inspect` 的 `detail=tool_result`、`target=<结果 id>` 可查询该窗口；关闭后不再可读。
+
+- `water_scanner` / `water_strip`：检测文字 `tested`、原标签 `label`、污染物或纯度。
+- `chemical_scanner`：化学品或水的当前检测文字、原标签、体积和窗口可见效果说明。
+- `plant_analyser`：营养范围、营养消耗、耗水、污染敏感性及当前生长说明。
+- `label_editor`：展示标签编辑器，`fields` 含字段名称、当前值、零起始 `options` 列表和动作。按返回动作传入 `target`、数字 `value` 选择标签。这是修改展示标签，不代表完成检测。
+- `name_editor`：名称标签编辑器；`set_item_label_text` 使用返回的 `target` 和字符串 `text`，遵循原版字符上限。
+
+匹配标签、质疑及其他按钮均使用当前 `controls` 中启用的原版动作；匹配会走游戏自身的状态更新，不直接写入标签。结束后调用返回的 `close_*` 动作并传入当前结果 `id` 作为 `target`。不自动匹配或质疑，仍由 agent 根据目标判断。
+
+基因扫描器属于开关设备，没有上述独立结果窗口。通过 `toggle_item` 开启后重新查询种子等物品的 `tooltip`，获取原版扩展说明；`scanners.gene_scanner_active` 返回当前原版扫描标记。图像仅在文字不足时按需使用现有途径。
+
 ## 顾客与交易
 
 `customer_context` 包含会话内实例 ID、原版标识、显示名称、到达状态和通缉信息。实例 ID 与射击目标一致。`customer_queue.remaining` 不含当前顾客，使用原版等待队列计数。`dialogue.full_text` 返回当前对白完整文字，顾客关联随其更换更新。

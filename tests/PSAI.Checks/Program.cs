@@ -45,3 +45,14 @@ if (StorageCatalogPolicy.IsCandidate(false, true, true, false)) throw new Except
 if (StorageCatalogPolicy.IsCandidate(true, false, false, false)) throw new Exception("Unavailable visible goods offered");
 if (!StorageCatalogPolicy.IsCandidate(true, false, false, true)) throw new Exception("Existing quote disappeared");
 Console.WriteLine("Storage catalog access and candidate checks passed (9 cases).");
+if (ToolControlInput.OptionIndex(0, 2) != 0 || ToolControlInput.OptionIndex(1, 2) != 1) throw new Exception("Label selection failed");
+Reject(() => ToolControlInput.OptionIndex(null, 2), "missing_control_value");
+foreach (var value in new[] { -1d, 2d, 0.5, double.NaN, double.PositiveInfinity })
+    Reject(() => ToolControlInput.OptionIndex(value, 2), "invalid_control_value");
+Reject(() => ToolControlInput.OptionIndex(0, 0), "invalid_control_value");
+if (ToolControlInput.LabelText("水瓶", 2) != "水瓶" || ToolControlInput.LabelText("", 2) != "") throw new Exception("Label text failed");
+Reject(() => ToolControlInput.LabelText(null, 2), "missing_label_text");
+Reject(() => ToolControlInput.LabelText("水瓶子", 2), "invalid_label_text");
+foreach (var value in new[] { "a\nb", "a\rb", "a\0b" })
+    Reject(() => ToolControlInput.LabelText(value, 0), "invalid_label_text");
+Console.WriteLine("Tool control input checks passed (16 cases).");
