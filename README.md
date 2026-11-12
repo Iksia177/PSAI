@@ -2,7 +2,7 @@
 
 **Probably Stolen Agent Interface**，为 Steam 版《深空当铺：可能是偷的》提供 AI agent 游玩接口。通过游戏侧原生模组和 agent 侧 CLI / MCP 工具，让 agent 读取游戏状态、作出经营决策并执行正常游戏操作。
 
-当前版本：**0.9.4**。项目正在接近“让 agent 能够完整玩上游戏”的初步目标，仍在持续测试与完善。
+当前版本：**0.9.5**。项目正在接近“让 agent 能够完整玩上游戏”的初步目标，仍在持续测试与完善。
 
 本项目采用 **vibe coding** 开发：由人提出想法、观察游玩并反馈问题，与 AI 协作实现和迭代。
 
@@ -21,7 +21,7 @@
 可选择以下任一安装方式：
 
 - **Steam 创意工坊**：[打开 PSAI 工坊页面并订阅](https://steamcommunity.com/sharedfiles/filedetails/?id=3838235633)，由 Steam 下载已发布版本。
-- **GitHub 手动下载**：[打开 v0.9.4 预发布](https://github.com/Iksia177/PSAI/releases/tag/v0.9.4)，下载 `PSAI-Mod-v0.9.4.zip`，按后文[游戏模组手动安装步骤](#游戏模组)放入游戏目录。使用编译安装包无需自行构建。
+- **GitHub 手动下载**：[打开 v0.9.5 预发布](https://github.com/Iksia177/PSAI/releases/tag/v0.9.5)，下载 `PSAI-Mod-v0.9.5.zip`，按后文[游戏模组手动安装步骤](#游戏模组)放入游戏目录。使用编译安装包无需自行构建。
 
 工坊与 GitHub 分别发布，可能因审核或更新进度而版本不同。核对实际下载版本，并同步更新 agent 工具。
 
@@ -53,7 +53,7 @@ npm ci --ignore-scripts --registry=https://registry.npmjs.org
 
 #### 下载编译安装包（无需构建）
 
-1. 退出游戏，在 [GitHub v0.9.4 预发布](https://github.com/Iksia177/PSAI/releases/tag/v0.9.4)的 **Assets** 中下载 [`PSAI-Mod-v0.9.4.zip`](https://github.com/Iksia177/PSAI/releases/download/v0.9.4/PSAI-Mod-v0.9.4.zip)。`Source code` 是源码，不是编译好的模组。
+1. 退出游戏，在 [GitHub v0.9.5 预发布](https://github.com/Iksia177/PSAI/releases/tag/v0.9.5)的 **Assets** 中下载 [`PSAI-Mod-v0.9.5.zip`](https://github.com/Iksia177/PSAI/releases/download/v0.9.5/PSAI-Mod-v0.9.5.zip)。`Source code` 是源码，不是编译好的模组。
 2. 在 Steam 游戏库右键本游戏，选择“管理 → 浏览本地文件”，打开游戏安装目录。
 3. 解压下载的 ZIP，将其中的整个 `psai` 文件夹放入游戏目录的 `Mods/`（没有该目录时创建）。最终结构应为：
 
@@ -157,4 +157,4 @@ CLI 提供 `status`、`observe`、`inspect`、`actions`、`act`、`result` 六�
 
 如需覆盖默认偏好，复制 `psai.preferences.example.json` 为 `psai.preferences.local.json`，修改完整规则列表，并设置环境变量 `PSAI_PREFERENCES_FILE` 为该文件的绝对路径。读取失败时回退到默认规则并返回说明。本机配置、游戏程序集、存档、通信文件及构建产物不随仓库分发。
 
-[版本说明](docs/RELEASE-v0.9.4.md) · [接口说明](docs/INTERFACE.md) · [开发说明](docs/DEVELOPMENT.md)
+[版本说明](docs/RELEASE-v0.9.5.md) · [接口说明](docs/INTERFACE.md) · [开发说明](docs/DEVELOPMENT.md)

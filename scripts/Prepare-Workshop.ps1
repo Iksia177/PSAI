@@ -71,7 +71,7 @@ $text = @"
     "visibility" "0"
     "title" "PSAI - Probably Stolen Agent Interface"
     "description" "$(Escape-PsaiVdf $description)"
-    "changenote" "PSAI $version - event dialogue priority, prompt attention and early-game UI support."
+    "changenote" "PSAI $version - detector result windows, native label controls and owned storage catalog. Live verification pending."
 }
 "@
 [IO.File]::WriteAllText($vdf, $text, [Text.UTF8Encoding]::new($false))

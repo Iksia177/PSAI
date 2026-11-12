@@ -238,7 +238,7 @@ test('MCP stdio initializes, lists all six tools and calls bridge status', async
     send({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'psai-tests', version: '0.1.0' } } });
     const initialized = await wait(1);
     assert.equal(initialized.error, undefined);
-    assert.equal(initialized.result.serverInfo?.version, '0.9.4');
+    assert.equal(initialized.result.serverInfo?.version, '0.9.5');
     assert.match(initialized.result.instructions!, /guidance/);
     send({ jsonrpc: '2.0', method: 'notifications/initialized' });
     send({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
