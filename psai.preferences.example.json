@@ -1,5 +1,5 @@
 {
-  "version": "local-7",
+  "version": "local-8",
   "rules": [
     {
       "id": "read-effects",
@@ -39,7 +39,7 @@
     {
       "id": "counter-cleanup",
       "priority": 7,
-      "instruction": "每次交易前、成交或取消后，以及开店后和夜间回店后，优先检查 counter（前柜台）与 back_counter（交易备货台），把确认属于自己且无“未拥有”标识的遗留物品收回主库存。先读 tooltip 或 owned 字段，所有权不明时先查询，避免移走顾客物品。关门不代表台面物品已收入库存。交易前先整理再备货，交易过程中保留正在报价、加工或提交的物品，结束后再收尾。空间不足时按容器用途暂存。"
+      "instruction": "counter 是门外的前柜台（顾客放货处）；back_counter 是店内交易备货台，不要把两者或外出地点的 afterhour_ground（地面）混为一谈。优先在打烊前、外出前，以及开店前后、每次交易前和成交或取消后整理自有台面物品。读取最新 observe.inventories 中这两个 id 的 items，依据 owned 或 tooltip 的“未拥有”标识核对所有权，再用 move_item（item=物品条目的 id，destination=库存 id）将自有遗留物移至 inventory 或已打开的合适储物容器，重新 observe 确认来源和去向。counter 上的物品在出门时会被原版清除，包括自有物品和准备携带的背包；关门不会自动收纳，窗口未列出也不代表台面已空，应优先在打烊前完成整理。交易前先整理再备货，保留当前交易中正在报价、加工或提交的物品，结束后再收尾；容量不足时选择用途合适的容器，所有权不明时先查询。"
     },
     {
       "id": "user-progress-reports",
@@ -80,6 +80,11 @@
       "id": "night-outing",
       "priority": 45,
       "instruction": "先检查 outing.unlocked、blocked_reasons、visits_remaining、can_depart_now 与门的提示。尚未解锁时跳过外出；条件不满足时按原因处理或等待正常进展，不反复尝试。条件允许时每晚优先考虑出门，结合当前目标、租金储备、时间和可见风险选择活动。外出选包优先选择当前允许携带、绝对总容量最大的背包，比较 capacity.total_cells，不以剩余空间代替总容量，同容量沿用列表顺序。"
+    },
+    {
+      "id": "outing-carry-check",
+      "priority": 46,
+      "instruction": "外出选包前，先按 counter-cleanup 将 counter 上准备携带的背包及其他自有物品收回 inventory 或合适的店内容器。使用 observe.screens 中 id=response_closable 的 choices 实际返回的 action 选择背包，比较 capacity.total_cells；“已选背包”仅表示选择结果，不代表已经携带成功。抵达地点并等待 busy=false 后，读取 observe.inventories 中 afterhour_backpack（背包槽）的 items，并核对对应 owner_item 的 afterhour_backpack_contents 及物品数量；缺失或为空时优先排查并向用户回报，不宣布背包已成功带出。afterhour_ground 是外出地点的地面，返回前用 move_item 将需要带回的物品放入 afterhour_left、afterhour_right 或实际携带的背包内部库存，再观察确认。回店转场结束后检查 back_counter、inventory 和必要时 display_case 中的背包，再打开核对内容；完成整理后关闭可关闭窗口。"
     },
     {
       "id": "upgrade-review",

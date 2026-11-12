@@ -20,7 +20,7 @@ node src/client/cli.ts result <command_id> --session <session_id>
 
 `trade` 提供当前意图、需求文字、预算、可见自有物品、出售候选、已备货物品、原版报价行与相关窗口文字。候选来自当前可见的实际库存；对白中的说明物不等于持有物品。
 
-出售备货位置是 `trade.offer_inventory`（`back_counter`）。`counter` 为顾客放货的前柜台，两个台面都可能存在自有或未拥有物品，关门不会自动收回。交易前整理遗留自有物品，再备货；交易结束后再次整理，避免误移顾客物品或尚在处理的报价。
+出售备货位置是 `trade.offer_inventory`（`back_counter`）。`counter` 为门外前柜台（顾客放货处），`back_counter` 为店内交易备货台。两者都可能存在自有或未拥有物品，关门不会自动收回。原版出门会清除 `counter` 上的物品，包括自有物品；选包前应先将台面背包收回店内。优先在打烊前整理，窗口隐藏或未列出不代表物品已收回。读取当前库存条目的 `owned` 或查询 `tooltip`，用 `move_item` 移至 `inventory` 或已打开的合适容器，随后观察确认。当前交易中的报价、加工或提交物品在结束后收尾，避免误移顾客物品。
 
 `trade.rows` 提供原版选择动作和选中状态。名称重复且无法唯一关联时，`matching_item_ids` 返回候选，`item_id` 留空。以物易物读取 `trade.barter` 的条件、候选和报价组；单件符合某一条件不代表整笔交换满足要求，最终核对 `conditions_met` 与原版按钮。
 
@@ -57,7 +57,7 @@ node src/client/cli.ts act '{"action":"close_inspection","target":"<inspection.i
 
 `outing` 返回 `unlocked`、`blocked_reasons`、`can_depart_now`、剩余次数及原版外出日期。未解锁或条件不足时不要重复请求。通过 `open_outside_confirmation` 正常出门，`travel-*` 是当前已发现地点，`return_store` 正常返回。实际执行前再次校验原版条件。
 
-`afterhour_ground` 是地上的物品；带回物品要放入口袋或背包。外出背包可长期保持打开。选包比较 `capacity.total_cells` 的绝对总容量。
+`afterhour_ground` 是地上的物品；带回物品要放入口袋或背包。外出背包可长期保持打开。选包比较 `capacity.total_cells` 的绝对总容量。选包提示不等于携带成功：抵达并等待 `busy=false` 后，核对 `afterhour_backpack.items` 中的实际背包及对应 `afterhour_backpack_contents`。回店后背包可能先落在 `back_counter`，检查实际落点及包内物品后再整理。
 
 ## 报告、图像与安全动作
 

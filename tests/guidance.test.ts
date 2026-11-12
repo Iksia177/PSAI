@@ -8,8 +8,8 @@ test('default guidance is ordered, advisory, and defers to current user instruct
   const guidance = await loadGuidance('');
   assert.equal(guidance.mode, 'advisory');
   assert.equal(guidance.user_instructions_take_precedence, true);
-  assert.equal(guidance.version, '7');
-  assert.deepEqual(guidance.rules.map(rule => rule.id), ['read-effects', 'window-discipline', 'showcase-purpose', 'rent-and-property', 'discover-operations', 'morning-machines', 'read-daily-report', 'counter-cleanup', 'user-progress-reports', 'trade-context', 'file-documents', 'contact-cards', 'store-idle-items', 'run-machines', 'night-electricity', 'night-outing', 'upgrade-review', 'accept-events', 'wanted-evidence']);
+  assert.equal(guidance.version, '8');
+  assert.deepEqual(guidance.rules.map(rule => rule.id), ['read-effects', 'window-discipline', 'showcase-purpose', 'rent-and-property', 'discover-operations', 'morning-machines', 'read-daily-report', 'counter-cleanup', 'user-progress-reports', 'trade-context', 'file-documents', 'contact-cards', 'store-idle-items', 'run-machines', 'night-electricity', 'night-outing', 'outing-carry-check', 'upgrade-review', 'accept-events', 'wanted-evidence']);
   assert.deepEqual(guidance.rules, defaultGuidance.rules);
 });
 
