@@ -26,6 +26,8 @@ node src/client/cli.ts result <command_id> --session <session_id>
 
 `trade.rows` 提供原版选择动作和选中状态。名称重复且无法唯一关联时，`matching_item_ids` 返回候选，`item_id` 留空。以物易物读取 `trade.barter` 的条件、候选和报价组；单件符合某一条件不代表整笔交换满足要求，最终核对 `conditions_met` 与原版按钮。
 
+`customer_interaction` 区分事件对白、普通对白、对白选择和买卖，返回当前顾客关联、`primary_action_ids` 与 `secondary_action_ids`。动作的 `channel` 区分 dialogue、trade 和 customer_management，`recommended` 标明当前优先级；原版允许的次要操作仍保留，并非强制禁止。事件期间优先完成原版 choice；送客可能中断事件，不能替代事件本身的拒绝选项。确认框仍优先于顾客对白。`trade.interaction_context=dialogue_only` 表示此次为对白来访，不应将空报价当作普通交易故障。
+
 ## 库存、容器与加工
 
 `inventories` 返回当前可见库存及中文名称，`panels` 提供容器窗口目标。使用 `open_panel` / `close_panel`，移动使用 `move_item`，其 `destination` 来自当前可见库存。嵌套容器需要保持必要父窗口可见，读取结束后逆序关闭。展示柜是具有经营作用的常驻区域。

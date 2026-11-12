@@ -162,7 +162,7 @@ namespace PSAI
                     var enabled = dialogue.currentDialog.IsChoiceEnabledAt(index);
                     var id = "choice-" + index;
                     var choiceItem = dialogue.currentDialog.choices[index].Item1;
-                    available.Add(new JObject { ["action"] = id, ["label"] = Text(bubble.TMP), ["enabled"] = enabled,
+                    available.Add(new JObject { ["action"] = id, ["label"] = PromptText(bubble.TMP), ["enabled"] = enabled,
                         ["tooltip_target"] = choiceItem == null ? null : RegisterItem(choiceItem),
                         ["fully_displayed"] = bubble.TMP != null && bubble.TMP.GetParsedText().Length <= bubble.TMP.maxVisibleCharacters });
                     if (enabled) actions[id] = bubble.OnDialogChoiceClick;
@@ -212,6 +212,7 @@ namespace PSAI
                     !(scriptedDialogue && IsDialogueAction(option.Value<string>("action") ?? ""))))
                     option["enabled"] = false;
             snapshot["actions"] = available;
+            CaptureCustomerInteraction(snapshot, screens, available);
             snapshot["attention"] = CaptureAttention(screens, available);
             foreach (var stale in itemIds.Keys.Where(item => !items.ContainsValue(item)).ToArray()) itemIds.Remove(stale);
             return snapshot;

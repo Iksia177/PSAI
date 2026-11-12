@@ -20,6 +20,12 @@ export function contextualGuidance(guidance: Guidance, snapshot?: unknown) {
   const panels = array(view.panels);
   const prompts = array(object(view.attention).items);
   const pending = prompts.filter(prompt => prompt.requires_response === true);
+  const interaction = object(view.customer_interaction);
+  const primary = Array.isArray(interaction.primary_action_ids) ? interaction.primary_action_ids.filter(id =>
+    typeof id === 'string' && hasAction(id)) : actions.filter(action =>
+      typeof action.action === 'string' && action.action.startsWith('choice-') && action.enabled === true).map(action => action.action);
+  const respond = interaction.kind === 'event_dialogue' || interaction.kind === 'dialogue_choice' || interaction.kind === 'dialogue' ||
+    actions.some(action => typeof action.action === 'string' && action.action.startsWith('choice-'));
   const absent = (reason: string): Availability => ({ state: 'not_observed', reason });
   const unlocked = (flag: unknown): Availability => flag === true ? available : flag === false
     ? { state: 'locked', reason: '原版进度尚未开放，跳过此项，正常推进当前对白和营业。' } : unknown;
@@ -69,9 +75,12 @@ export function contextualGuidance(guidance: Guidance, snapshot?: unknown) {
     else deferred.push({ id: rule.id, priority: rule.priority, ...condition });
   }
   return { ...guidance, context: observed ? 'current_observation' : 'awaiting_observation',
-    focus: { kind: !observed ? 'observe_first' : pending.length ? 'respond_to_prompt' : prompts.length ? 'read_tutorial_hint' : 'continue_available_tasks',
+    focus: { kind: !observed ? 'observe_first' : pending.length ? 'respond_to_prompt' : respond ? 'respond_to_customer' : prompts.length ? 'read_tutorial_hint' : 'continue_available_tasks',
+      primary_action_ids: pending.length ? pending.flatMap(prompt => array(prompt.controls)
+        .filter(control => control.enabled === true && typeof control.action === 'string').map(control => control.action)) : respond ? primary : [],
       screen_ids: (pending.length ? pending : prompts).map(prompt => prompt.screen_id),
       instruction: !observed ? '先 observe 获取当前窗口、对白和可用动作。' : pending.length ? '先读当前提示或设置窗口，按内容选择正常动作；不要自动确认消费、提交或剧情决定。'
+        : respond ? '优先完成当前对白及事件选项，读取 customer_interaction 与原版条件；送客、交易或砍价不是事件 choice 的替代操作。没有启用的主要动作时先等待并观察，不盲目改用送客。'
         : prompts.length ? '阅读教程提示，按当前实际操作推进；非阻塞说明不要求立即关闭。' : '按当前开放状态继续可用任务。' },
     rules, deferred_rules: deferred, availability,
     interpretation: 'features 表示模组实现的能力，不代表当前存档已开放。只将 rules 作为当前建议；deferred_rules 暂缓执行。动作缺失、未解锁或受限时重新观察并继续可用任务，单凭这些情况不要判定存档损坏。未知状态不等于未解锁。' };

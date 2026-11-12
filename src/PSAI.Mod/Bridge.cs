@@ -104,7 +104,7 @@ namespace PSAI
                     "response_choices", "contact_cards", "authorized_wanted_identity", "operation_discovery", "rent_obligations",
                     "outing_state", "firearm_actions", "visible_ownership", "scripted_dialogue",
                     "customer_context", "structured_trade", "daily_news", "customer_queue", "request_timings", "barter_context",
-                    "inspection_ui", "appraisal_input", "outing_unlock_reasons", "progression_state", "prompt_attention")
+                    "inspection_ui", "appraisal_input", "outing_unlock_reasons", "progression_state", "prompt_attention", "customer_interaction")
             };
         }
 

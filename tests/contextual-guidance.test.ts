@@ -80,3 +80,34 @@ test('response windows take focus while tutorial-only hints remain informational
   const empty = contextualGuidance(defaults, { attention: { items: [] } });
   assert.ok(!empty.rules.some(rule => rule.id === 'prompt-response'));
 });
+
+test('event choices outrank routine customer actions and disabled choices are not recommended', async () => {
+  const result = contextualGuidance(await loadGuidance(''), {
+    customer_interaction: { kind: 'event_dialogue', primary_action_ids: ['choice-0', 'choice-1'], secondary_action_ids: ['dismiss_customer', 'open_trade'] },
+    actions: [{ action: 'choice-0', enabled: true }, { action: 'choice-1', enabled: false },
+      { action: 'dismiss_customer', enabled: true }, { action: 'open_trade', enabled: true }],
+  });
+  assert.equal(result.focus.kind, 'respond_to_customer');
+  assert.deepEqual(result.focus.primary_action_ids, ['choice-0']);
+  assert.match(result.focus.instruction, /不是事件 choice 的替代/);
+});
+
+test('a native confirmation takes precedence over event choices without losing the event', async () => {
+  const result = contextualGuidance(await loadGuidance(''), {
+    customer_interaction: { kind: 'event_dialogue', primary_action_ids: ['choice-0'] },
+    actions: [{ action: 'choice-0', enabled: true }],
+    attention: { items: [{ screen_id: 'generic_confirmation', requires_response: true,
+      controls: [{ action: 'confirm_prompt', enabled: true }, { action: 'cancel_prompt', enabled: true }] }] },
+  });
+  assert.equal(result.focus.kind, 'respond_to_prompt');
+  assert.deepEqual(result.focus.primary_action_ids, ['confirm_prompt', 'cancel_prompt']);
+});
+
+test('older native mods still prioritize visible choices, while ordinary trades keep their workflow', async () => {
+  const defaults = await loadGuidance('');
+  const old = contextualGuidance(defaults, { actions: [{ action: 'choice-2', enabled: true }, { action: 'dismiss_customer', enabled: true }] });
+  assert.equal(old.focus.kind, 'respond_to_customer');
+  assert.deepEqual(old.focus.primary_action_ids, ['choice-2']);
+  const trade = contextualGuidance(defaults, { customer_interaction: { kind: 'trade', primary_action_ids: ['open_trade'] }, actions: [{ action: 'open_trade', enabled: true }] });
+  assert.equal(trade.focus.kind, 'continue_available_tasks');
+});

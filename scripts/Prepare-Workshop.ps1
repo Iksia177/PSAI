@@ -51,6 +51,13 @@ if (Test-Path -LiteralPath $vdf) {
     if ($previous -notmatch '"publishedfileid"\s+"(\d+)"') { throw 'Existing upload config has no valid item ID. Preserve and review it.' }
     $itemId = $Matches[1]
 }
+$publishedConfig = Join-Path $PsaiRoot 'workshop\item.json'
+if (Test-Path -LiteralPath $publishedConfig) {
+    $published = Get-Content -LiteralPath $publishedConfig -Raw | ConvertFrom-Json
+    if ($published.appid -ne '4348910' -or $published.publishedfileid -notmatch '^\d+$') { throw 'Invalid published Workshop item configuration.' }
+    if ($itemId -ne '0' -and $itemId -ne $published.publishedfileid) { throw 'Local upload ID differs from the published item. Review before updating.' }
+    $itemId = [string] $published.publishedfileid
+}
 function Escape-PsaiVdf([string] $value) { return $value.Replace('\', '\\').Replace('"', '\"').Replace("`r", '') }
 $description = (Get-Content -LiteralPath (Join-Path $PsaiRoot 'workshop\description.txt') -Raw).Trim()
 if ([Text.Encoding]::UTF8.GetByteCount($description) -gt 8000) { throw 'Workshop description exceeds 8000 UTF-8 bytes.' }

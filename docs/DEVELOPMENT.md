@@ -44,3 +44,5 @@ pwsh -NoProfile -File scripts/Test-Mod.ps1
 将 Valve 官方 SteamCMD 安装到 `.cache/steamcmd/`，在可交互终端运行 `pwsh -NoProfile -File scripts/Upload-Workshop.ps1`，使用拥有游戏的账号登录。密码和 Steam Guard 由 SteamCMD 交互处理，不写进脚本。首次发布可能需要在 Steam 网页接受工坊协议。
 
 发布配置 `.local-dev/workshop/psai.vdf` 不进入 Git。SteamCMD 会将工坊条目 ID 写回该文件，后续发布保留它以更新原条目，避免重复创建。上传成功后再更新 README 的订阅链接，并核对网页可见性及版本。
+
+已发布条目的公共 ID 同步保存在 `workshop/item.json`。准备脚本在新工作目录中也会复用该 ID；如果本机配置指向不同条目，会停止而不是覆盖。工坊包只在实际上传后更新，GitHub 提交本身不会改变已发布的二进制文件。

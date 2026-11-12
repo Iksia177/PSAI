@@ -18,7 +18,7 @@
 
 ### 游戏侧：模组安装
 
-推荐通过 Steam 创意工坊订阅 PSAI 模组。**工坊条目尚未发布，发布后会补上链接**；目前可使用后文的手动安装方式。
+推荐通过 Steam 创意工坊订阅 PSAI 模组。[打开 PSAI 工坊页面并订阅](https://steamcommunity.com/sharedfiles/filedetails/?id=3838235633)。也可以使用后文的手动安装方式。
 
 安装后，在游戏模组菜单启用 PSAI，重启游戏并载入存档。确认已经进入可操作界面，再让 agent 检查连接并开始游玩。
 
@@ -95,7 +95,7 @@ CLI 提供 `status`、`observe`、`inspect`、`actions`、`act`、`result` 六�
 ### 先连接，再按当前进度游玩
 
 1. 用户确认模组已启用、游戏已重启并进入可操作存档后，读取 `status`，检查 `online`、`ready`、`compatible`。
-2. 读取 `observe`，先看回执顶层 `attention` 和 `guidance.focus`，再看当前适用指导、对白、`customer_context`、`trade` 和可用 `actions`。
+2. 读取 `observe`，先看回执顶层 `attention` 和 `guidance.focus`，再看当前适用指导、对白、`customer_context`、`customer_interaction`、`trade` 和可用 `actions`。
 3. 按最新 `session_id`、`revision` 和目标 ID 执行动作，再观察实际结果。
 
 `status.features` 表示模组实现的能力，不代表存档已经解锁。`progression` 返回原版进度标记；`guidance.rules` 是当前适用的建议，`deferred_rules` 给出暂缓原因，`availability` 区分未解锁、当前受限和未知。正常推进教程及可用营业，不因入口缺失或暂时不可操作就判断存档损坏。
