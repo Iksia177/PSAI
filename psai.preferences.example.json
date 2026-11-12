@@ -1,5 +1,5 @@
 {
-  "version": "local-12",
+  "version": "local-13",
   "rules": [
     {
       "id": "prompt-response",
@@ -64,7 +64,7 @@
     {
       "id": "trade-context",
       "priority": 9,
-      "instruction": "交易先读 customer_context、customer_interaction、dialogue.full_text、trade 和当前窗口文字。customer_interaction.kind=event_dialogue 或 dialogue_choice 时，优先用 primary_action_ids 处理事件及完整 choice 选项，送客、砍价、交易是次要动作，不是事件选项的替代。需要拒绝事件时优先读取原版拒绝选项；不要仅因同时出现普通接客按钮就把委员会等事件当成普通买卖。现金出售候选从 trade.sell_candidates 或已观察库存中的实际物品选择。以物易物时读取 trade.barter 的条件、候选、报价组及换得物，候选匹配单项条件不代表完整交换已满足，结合 conditions_met 与原版按钮判断。使用自定义回调且候选判断未知时，按当前面板与标签核对，不把未知当作拒收。备货放入 trade.offer_inventory（back_counter，交易备货台），再核对原版报价。counter 是前柜台，物品移动成功也不等于已加入报价。需求、预算或选择条件不满足时读取原版拒绝信息。"
+      "instruction": "交易先读 customer_context、customer_interaction、dialogue.full_text、trade 和当前窗口文字。customer_interaction.kind=event_dialogue 或 dialogue_choice 时，优先用 primary_action_ids 处理事件及完整 choice 选项，送客、砍价、交易是次要动作，不是事件选项的替代。需要拒绝事件时优先读取原版拒绝选项；不要仅因同时出现普通接客按钮就把委员会等事件当成普通买卖。现金出售候选从 trade.sell_candidates 或 inventory_catalog.items 的实际自有物品选择，目录包括关闭的普通储物容器。requires_open=true 时先根据 next_open_target 调 open_panel，重新 observe 后逐层打开 container_path，再用新的 item_id 和实际库存ID取货。catalog_id是只读引用，不传给move_item；候选不等于已进入报价。以物易物时读取 trade.barter 的条件、候选、报价组及换得物，候选匹配单项条件不代表完整交换已满足，结合 conditions_met 与原版按钮判断。使用自定义回调且候选判断未知时，按当前面板与标签核对，不把未知当作拒收。备货放入 trade.offer_inventory（back_counter，交易备货台），再核对原版报价。counter 是前柜台，物品移动成功也不等于已加入报价。需求、预算或选择条件不满足时读取原版拒绝信息。"
     },
     {
       "id": "file-documents",

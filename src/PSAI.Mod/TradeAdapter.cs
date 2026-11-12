@@ -115,6 +115,11 @@ namespace PSAI
                 view["can_remove"] = item.MayRemove();
                 view["budget_sufficient"] = matches && (!client.useClientBudget || client.HasBudgetLeftToBuy(item));
                 view["in_sell_offer"] = sellable.Contains(item);
+                view["visible"] = true;
+                view["requires_open"] = false;
+                if (catalogViews.TryGetValue(item, out var catalog))
+                    foreach (var field in new[] { "catalog_id", "item_id", "root_inventory", "location_path", "container_path", "next_open_target", "can_move_now" })
+                        view[field] = catalog[field]?.DeepClone();
                 view["negotiated_value"] = item.GetNegociatedValue();
                 if (barter != null)
                 {
@@ -138,6 +143,7 @@ namespace PSAI
                 if (owned) candidates.Add(view);
                 else offeredGoods.Add(view);
             }
+            AddCatalogTradeCandidates(candidates, client, barterConditions, barter != null);
             var rows = new JArray();
             NegotiationTabletFrame? frame = null;
             if (open)
@@ -178,9 +184,11 @@ namespace PSAI
                 ["budget"] = client.useClientBudget ? new JValue(client.GetBudget()) : JValue.CreateNull(),
                 ["budget_limited"] = client.useClientBudget,
                 ["offer_inventory"] = "back_counter", ["offer_inventory_name"] = InventoryName("back_counter", ""),
-                ["visible_owned_items"] = candidates,
-                ["sell_candidates"] = new JArray(candidates.OfType<JObject>().Where(item => barter == null && item.Value<bool>("matches_demand") &&
-                    (item.Value<bool>("can_remove") || item.Value<bool>("in_sell_offer"))).Select(item => item.DeepClone())),
+                ["visible_owned_items"] = new JArray(candidates.OfType<JObject>().Where(item => item.Value<bool>("visible")).Select(item => item.DeepClone())),
+                ["owned_items"] = candidates,
+                ["candidate_scope"] = "owned_catalog_including_closed_normal_storage",
+                ["sell_candidates"] = new JArray(candidates.OfType<JObject>().Where(item => barter == null &&
+                    StorageCatalogPolicy.IsCandidate(item.Value<bool>("matches_demand"), item.Value<bool>("requires_open"), item.Value<bool>("can_remove"), item.Value<bool>("in_sell_offer"))).Select(item => item.DeepClone())),
                 ["counter_items"] = backItems,
                 ["sell_offer_items"] = new JArray(backItems.OfType<JObject>().Where(item => item.Value<bool>("in_sell_offer")).Select(item => item.DeepClone())),
                 ["rows"] = rows, ["selected_rows"] = new JArray(rows.OfType<JObject>().Where(row => row.Value<bool>("selected")).Select(row => row.DeepClone())),
@@ -188,11 +196,11 @@ namespace PSAI
                 ["action_ids"] = new JArray(texts.OfType<JObject>().SelectMany(screen =>
                     ((JArray?) screen["action_ids"] ?? new JArray()).Values<string>()).Concat(rows.OfType<JObject>()
                     .Where(row => row.Value<bool>("enabled")).Select(row => row.Value<string>("action"))).Distinct()),
-                ["source"] = "visible_inventory_instances_and_original_trade_conditions"
+                ["source"] = "actual_owned_catalog_and_original_trade_conditions"
             };
             if (barter != null)
             {
-                var barterCandidates = candidates.OfType<JObject>().Where(item => item.Value<bool?>("matches_demand") == true && item.Value<bool>("can_remove")).ToArray();
+                var barterCandidates = candidates.OfType<JObject>().Where(item => item.Value<bool?>("matches_demand") == true && (item.Value<bool>("requires_open") || item.Value<bool>("can_remove"))).ToArray();
                 ((JObject) snapshot["trade"]!)["barter"] = new JObject {
                     ["business_complete"] = client.isBusinessComplete,
                     ["conditions_met"] = !client.isBusinessComplete && barter.IsBarterAcceptable(),
@@ -202,7 +210,8 @@ namespace PSAI
                     ["receive_items"] = offeredGoods,
                     ["conditions"] = barterConditions == null ? new JArray() : new JArray(barterConditions.Select((condition, index) => new JObject {
                         ["index"] = index, ["description"] = condition.requiredDisplay,
-                        ["matching_visible_item_ids"] = new JArray(barterCandidates.Where(item => ((JArray) item["barter_condition_indices"]!).Values<int>().Contains(index)).Select(item => item["id"]!.DeepClone()))
+                        ["matching_visible_item_ids"] = new JArray(barterCandidates.Where(item => item.Value<bool>("visible") && ((JArray) item["barter_condition_indices"]!).Values<int>().Contains(index)).Select(item => item["id"]!.DeepClone())),
+                        ["matching_catalog_ids"] = new JArray(barterCandidates.Where(item => ((JArray) item["barter_condition_indices"]!).Values<int>().Contains(index)).Select(item => item["catalog_id"]?.DeepClone()))
                     })),
                     ["source"] = "original_barter_conditions_and_visible_items"
                 };

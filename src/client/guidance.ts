@@ -11,7 +11,7 @@ const guidanceSchema = z.object({
 });
 
 export const defaultGuidance = {
-  version: '12',
+  version: '13',
   rules: [
     { id: 'prompt-response', priority: 0, instruction: '每次观察或动作后先检查回执顶层 attention 和 guidance.focus。requires_response=true 的确认或设置窗口应先阅读内容并选择当前 controls 中启用的动作，再重新观察确认窗口消失或状态已推进；若 busy=true 或控件全部禁用，先等待并重新观察，不循环调用。确认可能消费、提交或推进剧情，不要自动点确定。设置窗口优先使用原版关闭按钮或对应 close_* 动作，不为关闭而改动设置。tutorial_hint 通常是说明或操作提示，按内容完成原版步骤；没有关闭动作时继续相应任务，不调用统一关闭教程。blocks_gameplay=null 表示尚不确定是否阻塞，不能把普通提示一律当作游戏卡死。' },
     { id: 'progression-first', priority: 0, instruction: '先读当前 observe 的 progression、guidance.availability、actions 和对白。status.features 表示模组支持能力，不表示存档已解锁；guidance.rules 是本次适用建议，deferred_rules 暂缓执行。教程或早期存档优先完成当前可用对白与营业，未开放或暂时受限的功能正常跳过，不循环尝试，不因此要求修复存档。状态未知时先观察和核对原版提示，动作与实际可见条件持续冲突时报告接口问题。当前用户指令优先。' },
@@ -25,7 +25,7 @@ export const defaultGuidance = {
     { id: 'read-daily-report', priority: 6, instruction: '每日先读取日报的夜间结果、事件线索、服务和状态信息，结合当前任务安排操作，读取完成后关闭报告。' },
     { id: 'counter-cleanup', priority: 7, instruction: 'counter 是门外的前柜台（顾客放货处）；back_counter 是店内交易备货台，不要把两者或外出地点的 afterhour_ground（地面）混为一谈。优先在打烊前、外出前，以及开店前后、每次交易前和成交或取消后整理自有台面物品。读取最新 observe.inventories 中这两个 id 的 items，依据 owned 或 tooltip 的“未拥有”标识核对所有权，再用 move_item（item=物品条目的 id，destination=库存 id）将自有遗留物移至 inventory 或已打开的合适储物容器，重新 observe 确认来源和去向。counter 上的物品在出门时会被原版清除，包括自有物品和准备携带的背包；关门不会自动收纳，窗口未列出也不代表台面已空，应优先在打烊前完成整理。交易前先整理再备货，保留当前交易中正在报价、加工或提交的物品，结束后再收尾；容量不足时选择用途合适的容器，所有权不明时先查询。' },
     { id: 'user-progress-reports', priority: 8, instruction: '推荐每天开店前（读取日报、整理库存与机器后）、每次确认实际成交后、夜间外出回店后，向用户简短回报已完成的操作、实际结果、选择理由和接下来打算做的事，方便用户及时指导。成交以现金、归属及原版结果复核，不把处理函数返回直接当作成交。用户可以调整回报频率；日常回报无需等待用户批准后续已授权操作。' },
-    { id: 'trade-context', priority: 9, instruction: '交易先读 customer_context、customer_interaction、dialogue.full_text、trade 和当前窗口文字。customer_interaction.kind=event_dialogue 或 dialogue_choice 时，优先用 primary_action_ids 处理事件及完整 choice 选项，送客、砍价、交易是次要动作，不是事件选项的替代。需要拒绝事件时优先读取原版拒绝选项；不要仅因同时出现普通接客按钮就把委员会等事件当成普通买卖。现金出售候选从 trade.sell_candidates 或已观察库存中的实际物品选择。以物易物时读取 trade.barter 的条件、候选、报价组及换得物，候选匹配单项条件不代表完整交换已满足，结合 conditions_met 与原版按钮判断。使用自定义回调且候选判断未知时，按当前面板与标签核对，不把未知当作拒收。备货放入 trade.offer_inventory（back_counter，交易备货台），再核对原版报价。counter 是前柜台，物品移动成功也不等于已加入报价。需求、预算或选择条件不满足时读取原版拒绝信息。' },
+    { id: 'trade-context', priority: 9, instruction: '交易先读 customer_context、customer_interaction、dialogue.full_text、trade 和当前窗口文字。customer_interaction.kind=event_dialogue 或 dialogue_choice 时，优先用 primary_action_ids 处理事件及完整 choice 选项，送客、砍价、交易是次要动作，不是事件选项的替代。需要拒绝事件时优先读取原版拒绝选项；不要仅因同时出现普通接客按钮就把委员会等事件当成普通买卖。现金出售候选从 trade.sell_candidates 或 inventory_catalog.items 的实际自有物品选择，目录包括关闭的普通储物容器。requires_open=true 时先根据 next_open_target 调 open_panel，重新 observe 后逐层打开 container_path，再用新的 item_id 和实际库存ID取货。catalog_id是只读引用，不传给move_item；候选不等于已进入报价。以物易物时读取 trade.barter 的条件、候选、报价组及换得物，候选匹配单项条件不代表完整交换已满足，结合 conditions_met 与原版按钮判断。使用自定义回调且候选判断未知时，按当前面板与标签核对，不把未知当作拒收。备货放入 trade.offer_inventory（back_counter，交易备货台），再核对原版报价。counter 是前柜台，物品移动成功也不等于已加入报价。需求、预算或选择条件不满足时读取原版拒绝信息。' },
     { id: 'file-documents', priority: 10, instruction: '优先将已归自己所有、暂时不用的文件放入文档柜。' },
     { id: 'contact-cards', priority: 12, instruction: '查看名片时优先读取 contact_cards 中的号码与面板文字，完成后关闭对应名片弹窗。需要联系时正常拨号，首次拨打后再核对原版联系历史。' },
     { id: 'store-idle-items', priority: 20, instruction: '优先将闲置自有物品整理至按用途适合且能够接收的容器，优先利用储物柜。正在交易、展示或生产使用的物品保留相应用途，先为机器运行计划保留投入物，缺少合适容器或容量时自行选择临时位置。' },

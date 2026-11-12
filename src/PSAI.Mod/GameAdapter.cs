@@ -41,6 +41,7 @@ namespace PSAI
         internal void Clear()
         {
             itemIds.Clear(); items.Clear(); inventories.Clear(); actions.Clear(); panels.Clear();
+            catalogIds.Clear(); catalogViews.Clear(); catalogVisibleItems.Clear(); nextCatalogId = 0;
             inventoryViews.Clear(); panelList.Clear(); nextItem = 0;
             ClearSceneReferences();
             ClearMidgame();
@@ -123,6 +124,7 @@ namespace PSAI
                 AddAction(available, "close_calendar_report", "Close the calendar and daily report", calendar.CloseUI);
             AddScreen("close_shop_confirmation", StoreUIManager.Instance.closeShutterConfirmationPanel, screens, available);
             CaptureMidgame(snapshot, screens, available, stock);
+            CaptureInventoryCatalog(snapshot);
             CaptureTrade(snapshot, screens, available);
             snapshot["panels"] = new JArray(panelList.Select(panel => panel.View));
             snapshot["screens"] = screens;

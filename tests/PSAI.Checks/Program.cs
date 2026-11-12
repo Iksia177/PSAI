@@ -35,3 +35,13 @@ Reject(() => AppraisalInput.Format(double.PositiveInfinity, 0), "invalid_apprais
 Reject(() => AppraisalInput.Format(12.5, 0), "appraisal_value_must_be_integer");
 Reject(() => AppraisalInput.Format(123, 2), "appraisal_value_too_long");
 Console.WriteLine("Appraisal input checks passed (10 cases).");
+if (!StorageCatalogPolicy.CanReadContents(true, true, false, false)) throw new Exception("Closed ordinary storage must be readable");
+if (!StorageCatalogPolicy.CanReadContents(true, true, true, true)) throw new Exception("Previously opened storage must be readable");
+if (StorageCatalogPolicy.CanReadContents(true, true, true, false)) throw new Exception("Unopened package leaked");
+if (StorageCatalogPolicy.CanReadContents(false, true, false, true)) throw new Exception("Unowned storage leaked");
+if (StorageCatalogPolicy.CanReadContents(true, false, false, true)) throw new Exception("Closed machinery leaked");
+if (!StorageCatalogPolicy.IsCandidate(true, true, false, false)) throw new Exception("Closed stored goods disappeared from candidates");
+if (StorageCatalogPolicy.IsCandidate(false, true, true, false)) throw new Exception("Wrong demand matched");
+if (StorageCatalogPolicy.IsCandidate(true, false, false, false)) throw new Exception("Unavailable visible goods offered");
+if (!StorageCatalogPolicy.IsCandidate(true, false, false, true)) throw new Exception("Existing quote disappeared");
+Console.WriteLine("Storage catalog access and candidate checks passed (9 cases).");
