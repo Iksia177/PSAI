@@ -1,5 +1,5 @@
 {
-  "version": "local-14",
+  "version": "local-15",
   "rules": [
     {
       "id": "read-tool-results",
@@ -59,7 +59,7 @@
     {
       "id": "counter-cleanup",
       "priority": 7,
-      "instruction": "counter 是门外的前柜台（顾客放货处）；back_counter 是店内交易备货台，不要把两者或外出地点的 afterhour_ground（地面）混为一谈。优先在打烊前、外出前，以及开店前后、每次交易前和成交或取消后整理自有台面物品。读取最新 observe.inventories 中这两个 id 的 items，依据 owned 或 tooltip 的“未拥有”标识核对所有权，再用 move_item（item=物品条目的 id，destination=库存 id）将自有遗留物移至 inventory 或已打开的合适储物容器，重新 observe 确认来源和去向。counter 上的物品在出门时会被原版清除，包括自有物品和准备携带的背包；关门不会自动收纳，窗口未列出也不代表台面已空，应优先在打烊前完成整理。交易前先整理再备货，保留当前交易中正在报价、加工或提交的物品，结束后再收尾；容量不足时选择用途合适的容器，所有权不明时先查询。"
+      "instruction": "counter 是门外的前柜台（顾客放货处）；back_counter 是店内交易备货台，不要把两者或外出地点的 afterhour_ground（地面）混为一谈。优先在打烊前、外出前，以及开店前后、每次交易前和成交或取消后整理自有台面物品。NPC事件赠送物品后也要及时收纳：例如教程警官给的通缉单会放在 counter，显示在台面不等于已进入库存。先按原版对白或领取步骤完成赠送，再读取 observe.inventories 中 id=counter 的 items；确认 owned=true 后，用 move_item（item=该条目.id，destination=inventory）收回主库存，并重新 observe 确认物品已在库存。仍标记未拥有时先完成原版领取流程；关门或外出前确认赠品已收好。读取最新 observe.inventories 中这两个 id 的 items，依据 owned 或 tooltip 的“未拥有”标识核对所有权，再用 move_item（item=物品条目的 id，destination=库存 id）将自有遗留物移至 inventory 或已打开的合适储物容器，重新 observe 确认来源和去向。counter 上的物品在出门时会被原版清除，包括自有物品和准备携带的背包；关门不会自动收纳，窗口未列出也不代表台面已空，应优先在打烊前完成整理。交易前先整理再备货，保留当前交易中正在报价、加工或提交的物品，结束后再收尾；容量不足时选择用途合适的容器，所有权不明时先查询。"
     },
     {
       "id": "user-progress-reports",
@@ -114,7 +114,7 @@
     {
       "id": "accept-events",
       "priority": 60,
-      "instruction": "NPC事件在资金、物品与前置条件满足并符合当前目标时，优先接受、购买或提交。读取完整条件与后续确认，资源冲突时结合用户目标自行取舍。"
+      "instruction": "NPC事件在资金、物品与前置条件满足并符合当前目标时，优先接受、购买或提交。读取完整条件与后续确认，资源冲突时结合用户目标自行取舍。若事件给予玩家物品，赠送完成后按 counter-cleanup 检查 counter，将已经归自己的赠品收回 inventory 并核对，不把“对白说已赠送”当作“物品已经入库”。"
     },
     {
       "id": "wanted-evidence",

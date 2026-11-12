@@ -11,7 +11,7 @@ const guidanceSchema = z.object({
 });
 
 export const defaultGuidance = {
-  version: '14',
+  version: '15',
   rules: [
     { id: 'read-tool-results', priority: 0, instruction: '使用检测器、试纸或植物分析器后，先读 observe.tool_results，按其中 id 使用 inspect detail=tool_result 查看检测结果、原标签、被测物和 controls。匹配标签与质疑使用当前启用的原版按钮；标签机选择是改写展示标签，不等于检测，也可能与真实品质不符。按 fields 的 options 用 value 传零起始选项编号；名称标签用 text。阅读或操作结束后使用返回的 close_* 动作和 target 关闭窗口。基因扫描器使用 toggle_item 开关，开启后重新 inspect tooltip 读取种子等物品的扩展说明。' },
     { id: 'prompt-response', priority: 0, instruction: '每次观察或动作后先检查回执顶层 attention 和 guidance.focus。requires_response=true 的确认或设置窗口应先阅读内容并选择当前 controls 中启用的动作，再重新观察确认窗口消失或状态已推进；若 busy=true 或控件全部禁用，先等待并重新观察，不循环调用。确认可能消费、提交或推进剧情，不要自动点确定。设置窗口优先使用原版关闭按钮或对应 close_* 动作，不为关闭而改动设置。tutorial_hint 通常是说明或操作提示，按内容完成原版步骤；没有关闭动作时继续相应任务，不调用统一关闭教程。blocks_gameplay=null 表示尚不确定是否阻塞，不能把普通提示一律当作游戏卡死。' },
@@ -24,7 +24,7 @@ export const defaultGuidance = {
     { id: 'discover-operations', priority: 4, instruction: '优先使用结构化接口和文字发现操作。读取 tooltip、operations、use_conditions 和机器控件，自行学习加工与生产流程，按执行后的实际状态核对结果。图像仅在结构化信息和文字不足、有可疑线索或用户要求时按需查询。' },
     { id: 'morning-machines', priority: 5, instruction: '起床后优先检查机器，收集并处理产物，补充合适投入物。结合可见电量、兼容性、运行状态和剩余资源，优先换上电量更多的适用电池，保留必要供电。' },
     { id: 'read-daily-report', priority: 6, instruction: '每日先读取日报的夜间结果、事件线索、服务和状态信息，结合当前任务安排操作，读取完成后关闭报告。' },
-    { id: 'counter-cleanup', priority: 7, instruction: 'counter 是门外的前柜台（顾客放货处）；back_counter 是店内交易备货台，不要把两者或外出地点的 afterhour_ground（地面）混为一谈。优先在打烊前、外出前，以及开店前后、每次交易前和成交或取消后整理自有台面物品。读取最新 observe.inventories 中这两个 id 的 items，依据 owned 或 tooltip 的“未拥有”标识核对所有权，再用 move_item（item=物品条目的 id，destination=库存 id）将自有遗留物移至 inventory 或已打开的合适储物容器，重新 observe 确认来源和去向。counter 上的物品在出门时会被原版清除，包括自有物品和准备携带的背包；关门不会自动收纳，窗口未列出也不代表台面已空，应优先在打烊前完成整理。交易前先整理再备货，保留当前交易中正在报价、加工或提交的物品，结束后再收尾；容量不足时选择用途合适的容器，所有权不明时先查询。' },
+    { id: 'counter-cleanup', priority: 7, instruction: 'counter 是门外的前柜台（顾客放货处）；back_counter 是店内交易备货台，不要把两者或外出地点的 afterhour_ground（地面）混为一谈。优先在打烊前、外出前，以及开店前后、每次交易前和成交或取消后整理自有台面物品。NPC事件赠送物品后也要及时收纳：例如教程警官给的通缉单会放在 counter，显示在台面不等于已进入库存。先按原版对白或领取步骤完成赠送，再读取 observe.inventories 中 id=counter 的 items；确认 owned=true 后，用 move_item（item=该条目.id，destination=inventory）收回主库存，并重新 observe 确认物品已在库存。仍标记未拥有时先完成原版领取流程；关门或外出前确认赠品已收好。读取最新 observe.inventories 中这两个 id 的 items，依据 owned 或 tooltip 的“未拥有”标识核对所有权，再用 move_item（item=物品条目的 id，destination=库存 id）将自有遗留物移至 inventory 或已打开的合适储物容器，重新 observe 确认来源和去向。counter 上的物品在出门时会被原版清除，包括自有物品和准备携带的背包；关门不会自动收纳，窗口未列出也不代表台面已空，应优先在打烊前完成整理。交易前先整理再备货，保留当前交易中正在报价、加工或提交的物品，结束后再收尾；容量不足时选择用途合适的容器，所有权不明时先查询。' },
     { id: 'user-progress-reports', priority: 8, instruction: '推荐每天开店前（读取日报、整理库存与机器后）、每次确认实际成交后、夜间外出回店后，向用户简短回报已完成的操作、实际结果、选择理由和接下来打算做的事，方便用户及时指导。成交以现金、归属及原版结果复核，不把处理函数返回直接当作成交。用户可以调整回报频率；日常回报无需等待用户批准后续已授权操作。' },
     { id: 'trade-context', priority: 9, instruction: '交易先读 customer_context、customer_interaction、dialogue.full_text、trade 和当前窗口文字。customer_interaction.kind=event_dialogue 或 dialogue_choice 时，优先用 primary_action_ids 处理事件及完整 choice 选项，送客、砍价、交易是次要动作，不是事件选项的替代。需要拒绝事件时优先读取原版拒绝选项；不要仅因同时出现普通接客按钮就把委员会等事件当成普通买卖。现金出售候选从 trade.sell_candidates 或 inventory_catalog.items 的实际自有物品选择，目录包括关闭的普通储物容器。requires_open=true 时先根据 next_open_target 调 open_panel，重新 observe 后逐层打开 container_path，再用新的 item_id 和实际库存ID取货。catalog_id是只读引用，不传给move_item；候选不等于已进入报价。以物易物时读取 trade.barter 的条件、候选、报价组及换得物，候选匹配单项条件不代表完整交换已满足，结合 conditions_met 与原版按钮判断。使用自定义回调且候选判断未知时，按当前面板与标签核对，不把未知当作拒收。备货放入 trade.offer_inventory（back_counter，交易备货台），再核对原版报价。counter 是前柜台，物品移动成功也不等于已加入报价。需求、预算或选择条件不满足时读取原版拒绝信息。' },
     { id: 'file-documents', priority: 10, instruction: '优先将已归自己所有、暂时不用的文件放入文档柜。' },
@@ -35,7 +35,7 @@ export const defaultGuidance = {
     { id: 'night-outing', priority: 45, instruction: '先检查 outing.unlocked、blocked_reasons、visits_remaining、can_depart_now 与门的提示。尚未解锁时跳过外出；条件不满足时按原因处理或等待正常进展，不反复尝试。条件允许时每晚优先考虑出门，结合当前目标、租金储备、时间和可见风险选择活动。外出选包优先选择当前允许携带、绝对总容量最大的背包，比较 capacity.total_cells，不以剩余空间代替总容量，同容量沿用列表顺序。' },
     { id: 'outing-carry-check', priority: 46, instruction: '外出选包前，先按 counter-cleanup 将 counter 上准备携带的背包及其他自有物品收回 inventory 或合适的店内容器。使用 observe.screens 中 id=response_closable 的 choices 实际返回的 action 选择背包，比较 capacity.total_cells；“已选背包”仅表示选择结果，不代表已经携带成功。抵达地点并等待 busy=false 后，读取 observe.inventories 中 afterhour_backpack（背包槽）的 items，并核对对应 owner_item 的 afterhour_backpack_contents 及物品数量；缺失或为空时优先排查并向用户回报，不宣布背包已成功带出。afterhour_ground 是外出地点的地面，返回前用 move_item 将需要带回的物品放入 afterhour_left、afterhour_right 或实际携带的背包内部库存，再观察确认。回店转场结束后检查 back_counter、inventory 和必要时 display_case 中的背包，再打开核对内容；完成整理后关闭可关闭窗口。' },
     { id: 'upgrade-review', priority: 50, instruction: '默认约每4个游戏日检查王德尔加点，可结合事件调整为3至5日。参考当前存档 save_context.upgrade_days_since_review 和购买记录，结合已有构筑与前置条件，约按1个主动构筑项目、2个被动项目交替考虑。默认仅使用专用货币，明确决定使用现金补差时传 allow_cash=true。' },
-    { id: 'accept-events', priority: 60, instruction: 'NPC事件在资金、物品与前置条件满足并符合当前目标时，优先接受、购买或提交。读取完整条件与后续确认，资源冲突时结合用户目标自行取舍。' },
+    { id: 'accept-events', priority: 60, instruction: 'NPC事件在资金、物品与前置条件满足并符合当前目标时，优先接受、购买或提交。读取完整条件与后续确认，资源冲突时结合用户目标自行取舍。若事件给予玩家物品，赠送完成后按 counter-cleanup 检查 counter，将已经归自己的赠品收回 inventory 并核对，不把“对白说已赠送”当作“物品已经入库”。' },
     { id: 'wanted-evidence', priority: 70, instruction: '优先读取 customer_identity 的独立通缉字段及名单关联，并结合文字线索判断举报依据。区分通缉犯与普通盗窃、出售赃物或违禁品等情况，使用 report_customer 时填写 evidence 和信息来源。结构化身份由用户授权读取。只有仍存在有意义的疑点且文字不足时才按需取图。' },
   ],
 };
