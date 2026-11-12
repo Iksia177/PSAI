@@ -11,11 +11,12 @@ const guidanceSchema = z.object({
 });
 
 export const defaultGuidance = {
-  version: '11',
+  version: '12',
   rules: [
     { id: 'prompt-response', priority: 0, instruction: '每次观察或动作后先检查回执顶层 attention 和 guidance.focus。requires_response=true 的确认或设置窗口应先阅读内容并选择当前 controls 中启用的动作，再重新观察确认窗口消失或状态已推进；若 busy=true 或控件全部禁用，先等待并重新观察，不循环调用。确认可能消费、提交或推进剧情，不要自动点确定。设置窗口优先使用原版关闭按钮或对应 close_* 动作，不为关闭而改动设置。tutorial_hint 通常是说明或操作提示，按内容完成原版步骤；没有关闭动作时继续相应任务，不调用统一关闭教程。blocks_gameplay=null 表示尚不确定是否阻塞，不能把普通提示一律当作游戏卡死。' },
     { id: 'progression-first', priority: 0, instruction: '先读当前 observe 的 progression、guidance.availability、actions 和对白。status.features 表示模组支持能力，不表示存档已解锁；guidance.rules 是本次适用建议，deferred_rules 暂缓执行。教程或早期存档优先完成当前可用对白与营业，未开放或暂时受限的功能正常跳过，不循环尝试，不因此要求修复存档。状态未知时先观察和核对原版提示，动作与实际可见条件持续冲突时报告接口问题。当前用户指令优先。' },
     { id: 'read-effects', priority: 0, instruction: '移动、拆卸、升级或使用物品前，先读取相关物品、目标与设施的 tooltip 标签、效果和操作条件。根据 use_conditions 及原版提示选择工具和材料。' },
+    { id: 'read-open-documents', priority: 1, instruction: '打开指南、书册或说明文档后读取 observe.documents，按其中 id 使用 inspect detail=document 获取当前页正文、页码和 action_ids。机械手等指南使用 multipage_guide；书册使用 book。仅当前可见页可读，按当前启用动作逐页阅读；图案或说明不足时使用 image_target 按需查询局部图像，不把空文本当成指南无内容。阅读结束关闭对应文档，不为读取未取得资料绕过原版打开流程。' },
     { id: 'window-discipline', priority: 1, instruction: '优先只保留当前存取或使用所需的两个可关闭容器窗口。同一对容器可连续操作，完成或失败后关闭相关窗口。嵌套操作保留必要父窗口，结束时逆序关闭。' },
     { id: 'showcase-purpose', priority: 2, instruction: '展示柜具有影响客户群体等经营功能，优先保留其中物品用于陈列，交易先使用库存及其他自有储备。需要调整陈列时先读取客户群体与效果，再结合经营目的决定；优先开店前完成陈列，营业后调整可能次日才生效，出现 display_case_timing 提示时读取原版说明后确认。普通收纳优先选择用途合适的储物容器。' },
     { id: 'rent-and-property', priority: 3, instruction: '关注 obligations 和租金提示，优先保障周期交租及必要支出，避免连续两次交租失败导致游戏失败。以通过正常购房事件取得店铺产权作为长期目标，结合租金、经营与购房条件安排资金。' },

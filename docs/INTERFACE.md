@@ -81,3 +81,17 @@ node src/client/cli.ts act '{"action":"close_inspection","target":"<inspection.i
 `image_targets` 列出当前可查询的局部图像。`inspect` 的 `detail: image` 首次返回 pending，再次查询获取 PNG。默认先读结构化信息与文字，只有不足时取图。鉴定图像仅裁切当前打开的鉴定窗口。
 
 当前顾客的独立通缉字段是项目明确开放的信息，输出标记来源。举报需传入 `evidence`。射击动作需当前 `firearm.target`，实际结果及后续对白继续观察；所有这些行为仍服从用户当前指令。
+
+## 指南与文档阅读
+
+正常激活持有的指南后，先读 `observe.documents`，再用其中的 `id` 查询：
+
+```json
+{"target":"multipage_guide","detail":"document"}
+```
+
+机械手、燃料匣、肋明治等指南共用 `multipage_guide` 阅读器；普通书册使用 `book`，单页纸张使用 `paper`。查询只返回当前可见页，不查询所有书籍资源或提前展开隐藏页面。
+
+`text` 包含当前页文字，`body_text` 排除按钮文字；`text_status=no_visible_body_text` 表示没有可提取的正文，不表示文档为空。`graphic_count` 提示页内图形数量，需要辨认图案时以 `image_target` 按需查询 `detail=image`。多页指南还提供 `page_number`、`page_count` 和原版 `page_text`。
+
+按当前 `actions` 的可用状态执行 `multipage_previous` / `multipage_next`、`book_previous` / `book_next`，通过文档的 `action_ids` 找到关闭和其他原版按钮。翻页后重新观察或查询正文；关闭后 `inspect document` 拒绝读取，旧页图像上下文失效。书册目录中的原版按钮也通过屏幕动作返回，未提供统一跳过或一次读取全部页面。

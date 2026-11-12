@@ -80,7 +80,14 @@ try {
         @('DialogSettingUIManager', 'CloseUI', 0),
         @('GameOptionUIManager', 'CloseUI', 0),
         @('TutorialUIManager', 'OnHintClosed', 0),
-        @('PlayerStore', 'ShowDisplayCaseTimingTipOnce', 0)
+        @('PlayerStore', 'ShowDisplayCaseTimingTipOnce', 0),
+        @('MultiPageUIManager', 'OpenUI', 1),
+        @('MultiPageUIManager', 'FlipLeftClicked', 0),
+        @('MultiPageUIManager', 'FlipRightClicked', 0),
+        @('MultiPageUIManager', 'CloseUI', 0),
+        @('PaperUIManager', 'BookLeftClick', 0),
+        @('PaperUIManager', 'BookRightClick', 0),
+        @('MiscItemDirectory', 'HandGuide', 0)
     )
     $checks = @($required | ForEach-Object {
         $typeName, $methodName, $parameterCount = $_

@@ -1,5 +1,5 @@
 {
-  "version": "local-11",
+  "version": "local-12",
   "rules": [
     {
       "id": "prompt-response",
@@ -15,6 +15,11 @@
       "id": "read-effects",
       "priority": 0,
       "instruction": "移动、拆卸、升级或使用物品前，先读取相关物品、目标与设施的 tooltip 标签、效果和操作条件。根据 use_conditions 及原版提示选择工具和材料。"
+    },
+    {
+      "id": "read-open-documents",
+      "priority": 1,
+      "instruction": "打开指南、书册或说明文档后读取 observe.documents，按其中 id 使用 inspect detail=document 获取当前页正文、页码和 action_ids。机械手等指南使用 multipage_guide；书册使用 book。仅当前可见页可读，按当前启用动作逐页阅读；图案或说明不足时使用 image_target 按需查询局部图像，不把空文本当成指南无内容。阅读结束关闭对应文档，不为读取未取得资料绕过原版打开流程。"
     },
     {
       "id": "window-discipline",

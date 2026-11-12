@@ -18,6 +18,7 @@ export function contextualGuidance(guidance: Guidance, snapshot?: unknown) {
   const screens = array(view.screens);
   const inventories = array(view.inventories);
   const panels = array(view.panels);
+  const documents = array(view.documents);
   const prompts = array(object(view.attention).items);
   const pending = prompts.filter(prompt => prompt.requires_response === true);
   const interaction = object(view.customer_interaction);
@@ -58,6 +59,7 @@ export function contextualGuidance(guidance: Guidance, snapshot?: unknown) {
       ? available : absent('当前未观察到可用储物容器，保留物品在主库存并正常推进。'),
     carrying: outside || choosingBag ? available : afterhours,
     prompts: !observed ? unknown : prompts.length ? available : absent('当前没有已观察到的待处理提示或设置窗口。'),
+    documents_open: !observed ? unknown : documents.length ? available : absent('当前没有打开的指南或书册，取得并正常打开后再阅读。'),
   };
   const dependencies: Record<string, string> = {
     'showcase-purpose': 'display_case', 'morning-machines': 'machines', 'run-machines': 'machines', 'night-electricity': 'machines',
@@ -65,6 +67,7 @@ export function contextualGuidance(guidance: Guidance, snapshot?: unknown) {
     'trade-context': 'customer', 'accept-events': 'customer', 'wanted-evidence': 'customer',
     'contact-cards': 'cards', 'file-documents': 'documents', 'store-idle-items': 'storage',
     'prompt-response': 'prompts',
+    'read-open-documents': 'documents_open',
   };
   const rules: Guidance['rules'] = [];
   const deferred: { id: string; priority: number; state: State; reason: string }[] = [];
@@ -75,11 +78,13 @@ export function contextualGuidance(guidance: Guidance, snapshot?: unknown) {
     else deferred.push({ id: rule.id, priority: rule.priority, ...condition });
   }
   return { ...guidance, context: observed ? 'current_observation' : 'awaiting_observation',
-    focus: { kind: !observed ? 'observe_first' : pending.length ? 'respond_to_prompt' : respond ? 'respond_to_customer' : prompts.length ? 'read_tutorial_hint' : 'continue_available_tasks',
+    focus: { kind: !observed ? 'observe_first' : pending.length ? 'respond_to_prompt' : documents.length ? 'read_document' : respond ? 'respond_to_customer' : prompts.length ? 'read_tutorial_hint' : 'continue_available_tasks',
+      document_ids: documents.map(document => document.id),
       primary_action_ids: pending.length ? pending.flatMap(prompt => array(prompt.controls)
-        .filter(control => control.enabled === true && typeof control.action === 'string').map(control => control.action)) : respond ? primary : [],
+        .filter(control => control.enabled === true && typeof control.action === 'string').map(control => control.action)) : documents.length ? [] : respond ? primary : [],
       screen_ids: (pending.length ? pending : prompts).map(prompt => prompt.screen_id),
       instruction: !observed ? '先 observe 获取当前窗口、对白和可用动作。' : pending.length ? '先读当前提示或设置窗口，按内容选择正常动作；不要自动确认消费、提交或剧情决定。'
+        : documents.length ? '读取当前打开文档的正文和页码；按返回动作翻页，需要图案时按需取图，阅读结束关闭。'
         : respond ? '优先完成当前对白及事件选项，读取 customer_interaction 与原版条件；送客、交易或砍价不是事件 choice 的替代操作。没有启用的主要动作时先等待并观察，不盲目改用送客。'
         : prompts.length ? '阅读教程提示，按当前实际操作推进；非阻塞说明不要求立即关闭。' : '按当前开放状态继续可用任务。' },
     rules, deferred_rules: deferred, availability,

@@ -2,7 +2,7 @@
 
 **Probably Stolen Agent Interface**，为 Steam 版《深空当铺：可能是偷的》提供 AI agent 游玩接口。通过游戏侧原生模组和 agent 侧 CLI / MCP 工具，让 agent 读取游戏状态、作出经营决策并执行正常游戏操作。
 
-当前版本：**0.9.2**。项目正在接近“让 agent 能够完整玩上游戏”的初步目标，仍在持续测试与完善。
+当前版本：**0.9.3**。项目正在接近“让 agent 能够完整玩上游戏”的初步目标，仍在持续测试与完善。
 
 本项目采用 **vibe coding** 开发：由人提出想法、观察游玩并反馈问题，与 AI 协作实现和迭代。
 
@@ -109,7 +109,7 @@ CLI 提供 `status`、`observe`、`inspect`、`actions`、`act`、`result` 六�
 - `counter` 是门外前柜台，`back_counter` 是店内交易备货台，`afterhour_ground` 是外出地点的地面。打烊和外出前收回 `counter` 上的自有物品，原版出门会清除台面留物。窗口未列出不代表台面已空。
 - 普通出售备货使用 `trade.offer_inventory`（通常为 `back_counter`），移动后核对原版报价和 `trade.rows`。以物易物读取 `trade.barter` 的条件与报价，不凭对白中的物品名称猜测持有物。
 - 根据 `owned` 或原版“未拥有”提示核对所有权。交易前后整理遗留自有物品，当前报价、加工或提交中的物品在交易结束后收尾。展示柜有经营用途，普通收纳优先选合适储物容器。
-- 先读 `tooltip`、`operations`、`use_conditions` 和机器控件，再决定加工与生产。鉴定读取 `inspection`，图案信息不足时按需取局部图像，使用后关闭相关窗口。
+- 先读 `tooltip`、`operations`、`use_conditions` 和机器控件，再决定加工与生产。鉴定读取 `inspection`；鉴定指南、书册和说明页读取 `documents`，用 `inspect document` 查询当前可见正文，再按返回动作翻页或关闭。图案信息不足时按需取局部图像，使用后关闭相关窗口。
 - 外出先查 `outing` 的开放状态、原因、次数与出发条件。选包提示不代表已经携带成功，到达后核对背包槽和内部物品；返回前把需要带回的物品从地面放入随身容器。
 - 推荐开店前、确认成交后和外出返回后，向用户简短回报结果、理由与下一步意图，便于用户指导。
 
@@ -133,4 +133,4 @@ CLI 提供 `status`、`observe`、`inspect`、`actions`、`act`、`result` 六�
 
 如需覆盖默认偏好，复制 `psai.preferences.example.json` 为 `psai.preferences.local.json`，修改完整规则列表，并设置环境变量 `PSAI_PREFERENCES_FILE` 为该文件的绝对路径。读取失败时回退到默认规则并返回说明。本机配置、游戏程序集、存档、通信文件及构建产物不随仓库分发。
 
-[版本说明](docs/RELEASE-v0.9.2.md) · [接口说明](docs/INTERFACE.md) · [开发说明](docs/DEVELOPMENT.md)
+[版本说明](docs/RELEASE-v0.9.3.md) · [接口说明](docs/INTERFACE.md) · [开发说明](docs/DEVELOPMENT.md)

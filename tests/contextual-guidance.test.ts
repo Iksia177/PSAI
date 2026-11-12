@@ -111,3 +111,26 @@ test('older native mods still prioritize visible choices, while ordinary trades 
   const trade = contextualGuidance(defaults, { customer_interaction: { kind: 'trade', primary_action_ids: ['open_trade'] }, actions: [{ action: 'open_trade', enabled: true }] });
   assert.equal(trade.focus.kind, 'continue_available_tasks');
 });
+
+test('an opened guide is read before answering the waiting customer, then customer focus resumes', async () => {
+  const defaults = await loadGuidance('');
+  const base = { customer_interaction: { kind: 'dialogue_choice', primary_action_ids: ['choice-0'] }, actions: [{ action: 'choice-0', enabled: true }] };
+  const reading = contextualGuidance(defaults, { ...base, documents: [{ id: 'multipage_guide', page_number: 1, text: ['机械手鉴定指南'] }] });
+  assert.equal(reading.focus.kind, 'read_document');
+  assert.deepEqual(reading.focus.document_ids, ['multipage_guide']);
+  assert.deepEqual(reading.focus.primary_action_ids, []);
+  assert.ok(reading.rules.some(rule => rule.id === 'read-open-documents'));
+  const closed = contextualGuidance(defaults, { ...base, documents: [] });
+  assert.equal(closed.focus.kind, 'respond_to_customer');
+  assert.ok(!closed.rules.some(rule => rule.id === 'read-open-documents'));
+});
+
+test('a confirmation remains ahead of a graphical guide without visible body text', async () => {
+  const result = contextualGuidance(await loadGuidance(''), {
+    documents: [{ id: 'multipage_guide', text: [], text_status: 'no_visible_body_text', image_target: 'multipage_guide' }],
+    attention: { items: [{ screen_id: 'generic_confirmation', requires_response: true, controls: [{ action: 'confirm_prompt', enabled: true }] }] },
+  });
+  assert.equal(result.focus.kind, 'respond_to_prompt');
+  assert.deepEqual(result.focus.primary_action_ids, ['confirm_prompt']);
+  assert.ok(result.rules.some(rule => rule.id === 'read-open-documents'));
+});

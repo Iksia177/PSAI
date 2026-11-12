@@ -16,8 +16,8 @@ namespace PSAI
         private readonly Dictionary<string, Func<Rect>> imageTargets = new Dictionary<string, Func<Rect>>();
         private readonly Dictionary<string, object> imageContexts = new Dictionary<string, object>();
 
-        private void ClearMidgame() { ClearMidgameViews(); inspectionItem = null; inspectionImageContext = null; ClearFirearm(); GameImages.Reset(); }
-        private void ClearMidgameViews() { parameterActions.Clear(); visibleTooltips.Clear(); imageTargets.Clear(); imageContexts.Clear(); inspectionView = null; }
+        private void ClearMidgame() { ClearMidgameViews(); documentContexts.Clear(); inspectionItem = null; inspectionImageContext = null; ClearFirearm(); GameImages.Reset(); }
+        private void ClearMidgameViews() { parameterActions.Clear(); visibleTooltips.Clear(); imageTargets.Clear(); imageContexts.Clear(); inspectionView = null; documentViews.Clear(); }
 
         private void CaptureMidgame(JObject snapshot, JArray screens, JArray available, JArray stock)
         {
@@ -65,6 +65,7 @@ namespace PSAI
                 var wantedDocument = items.Values.FirstOrDefault(item => item.GetDisplayName(true) == "治安部通缉名单");
                 if (wantedDocument != null && !IsBusy(store)) AddAction(available, "open_wanted", "Read the acquired wanted document", paper.OpenWantedPaper);
             }
+            CaptureDocuments(snapshot, screens, available);
             var security = StoreSecButton.Instance;
             if (security != null && security.gameObject.activeInHierarchy && security.IsTooltipEnabled())
             {
@@ -255,6 +256,7 @@ namespace PSAI
 
         private JObject? InspectMidgame(string target, string detail, JObject args)
         {
+            if (detail == "document") return InspectDocument(target);
             if (detail == "appraisal") return InspectAppraisal(target);
             if (detail == "operations" || detail == "capacity" || detail == "liquid") return InspectInteractions(target, detail);
             if (detail == "image")
