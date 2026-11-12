@@ -18,7 +18,12 @@
 
 ### 游戏侧：模组安装
 
-推荐通过 Steam 创意工坊订阅 PSAI 模组。[打开 PSAI 工坊页面并订阅](https://steamcommunity.com/sharedfiles/filedetails/?id=3838235633)。也可以使用后文的手动安装方式。
+可选择以下任一安装方式：
+
+- **Steam 创意工坊**：[打开 PSAI 工坊页面并订阅](https://steamcommunity.com/sharedfiles/filedetails/?id=3838235633)，由 Steam 下载已发布版本。
+- **GitHub 手动下载**：[打开 v0.9.3 预发布](https://github.com/Iksia177/PSAI/releases/tag/v0.9.3)，下载 `PSAI-Mod-v0.9.3.zip`，按后文[游戏模组手动安装步骤](#游戏模组)放入游戏目录。使用编译安装包无需自行构建。
+
+工坊与 GitHub 分别发布，可能因审核或更新进度而版本不同。核对实际下载版本，并同步更新 agent 工具。
 
 安装后，在游戏模组菜单启用 PSAI，重启游戏并载入存档。确认已经进入可操作界面，再让 agent 检查连接并开始游玩。
 
@@ -46,9 +51,28 @@ npm ci --ignore-scripts --registry=https://registry.npmjs.org
 
 ### 游戏模组
 
-可从 [GitHub v0.9.2 预发布](https://github.com/Iksia177/PSAI/releases/tag/v0.9.2)下载 `PSAI-Mod-v0.9.2.zip`，退出游戏后解压到游戏安装目录的 `Mods/`。压缩包自带 `psai/` 文件夹，最终文件位置应为 `Mods/psai/PSAI.Mod.dll` 与 `Mods/psai/manifest.xml`，随后启用模组、重启游戏并载入存档。
+#### 下载编译安装包（无需构建）
 
-需要从源码构建时，使用下述方式。从源码构建需要 PowerShell 7、`global.json` 指定的 .NET SDK，以及本机安装的受支持 Steam 游戏。
+1. 退出游戏，在 [GitHub v0.9.3 预发布](https://github.com/Iksia177/PSAI/releases/tag/v0.9.3)的 **Assets** 中下载 [`PSAI-Mod-v0.9.3.zip`](https://github.com/Iksia177/PSAI/releases/download/v0.9.3/PSAI-Mod-v0.9.3.zip)。`Source code` 是源码，不是编译好的模组。
+2. 在 Steam 游戏库右键本游戏，选择“管理 → 浏览本地文件”，打开游戏安装目录。
+3. 解压下载的 ZIP，将其中的整个 `psai` 文件夹放入游戏目录的 `Mods/`（没有该目录时创建）。最终结构应为：
+
+```text
+游戏安装目录/
+└─ Mods/
+   └─ psai/
+      ├─ PSAI.Mod.dll
+      └─ manifest.xml
+```
+
+4. 启动游戏，在模组菜单启用 PSAI，按提示重启游戏，再载入存档。
+5. Agent 工具按前文安装并配置；用户确认存档就绪后，才检查桥接并开始游玩。
+
+更新手动安装的版本时，同样先退出游戏，再用新包覆盖 `Mods/psai/` 内的这两个文件并重启。安装此编译包不需要 .NET SDK。Release 中的 `SHA256SUMS.txt` 可用于校验下载；通过 GitHub 手动安装的模组需自行更新。
+
+#### 从源码构建
+
+需要 PowerShell 7、`global.json` 指定的 .NET SDK，以及本机安装的受支持 Steam 游戏。
 
 1. 将 `psai.local.example.json` 复制为 `psai.local.json`，填写本机游戏安装目录。
 2. 在项目目录执行构建和原版扫描：

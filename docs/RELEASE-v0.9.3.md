@@ -10,3 +10,11 @@
 工具、MCP、模组和启动日志统一为0.9.3，协议仍为0.1。请同步更新工具和游戏模组，并重启游戏与MCP。
 
 本版本通过离线构建与回归检查，指南页面的实际文字/图案覆盖仍需使用样本实测。已发布的GitHub Release附件和Steam工坊分别更新，以下载包标记及实际提交结果为准。
+
+## 安装编译包
+
+1. 在本 Release 的 Assets 中下载 `PSAI-Mod-v0.9.3.zip`，`SHA256SUMS.txt` 提供校验值。GitHub 自动附带的 Source code 是源码包。
+2. 退出游戏，将 ZIP 内的 `psai` 文件夹放入游戏安装目录的 `Mods/`，最终应有 `Mods/psai/PSAI.Mod.dll` 与 `Mods/psai/manifest.xml`。
+3. 在模组菜单启用 PSAI，重启游戏并载入存档。Agent 侧同步更新工具并重启 MCP。
+
+安装编译包无需 .NET SDK 或自行构建。手动安装需自行更新；Steam 工坊与 GitHub Release 分别发布，工坊是否已同步以实际内容为准。
