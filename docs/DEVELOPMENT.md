@@ -36,3 +36,11 @@ pwsh -NoProfile -File scripts/Test-Mod.ps1
 `node scripts/Measure-Bridge.ts` 测量离线目录枚举；用户确认可操作存档就绪后，`--live` 读取桥接耗时。设置 `PSAI_PROFILE=1` 时，CLI/MCP 返回端到端时间和回执体积。原版回执包含快照和目录枚举统计，诊断数据不参与状态版本。
 
 开发者个人的交接、测试流水及临时约束应保存在本机忽略目录，不作为游玩指导或发行能力说明。版本说明描述用户可用能力；新增接口的实机覆盖范围由发布时实际验证结果说明。
+
+## 工坊发布
+
+先构建并通过原版扫描，再运行 `pwsh -NoProfile -File scripts/Prepare-Workshop.ps1`。它只打包模组 DLL 和清单，生成预览图及公开发布配置；工坊文案位于 `workshop/description.txt`。
+
+将 Valve 官方 SteamCMD 安装到 `.cache/steamcmd/`，在可交互终端运行 `pwsh -NoProfile -File scripts/Upload-Workshop.ps1`，使用拥有游戏的账号登录。密码和 Steam Guard 由 SteamCMD 交互处理，不写进脚本。首次发布可能需要在 Steam 网页接受工坊协议。
+
+发布配置 `.local-dev/workshop/psai.vdf` 不进入 Git。SteamCMD 会将工坊条目 ID 写回该文件，后续发布保留它以更新原条目，避免重复创建。上传成功后再更新 README 的订阅链接，并核对网页可见性及版本。
