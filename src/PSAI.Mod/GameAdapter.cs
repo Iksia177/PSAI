@@ -212,6 +212,7 @@ namespace PSAI
                     !(scriptedDialogue && IsDialogueAction(option.Value<string>("action") ?? ""))))
                     option["enabled"] = false;
             snapshot["actions"] = available;
+            snapshot["attention"] = CaptureAttention(screens, available);
             foreach (var stale in itemIds.Keys.Where(item => !items.ContainsValue(item)).ToArray()) itemIds.Remove(stale);
             return snapshot;
         }

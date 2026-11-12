@@ -74,7 +74,13 @@ try {
         @('CigaretteUI', 'OnInit', 1),
         @('AppHandUI', 'OnInit', 1),
         @('RibwichUI', 'OnInit', 1),
-        @('FuelUI', 'OnInit', 1)
+        @('FuelUI', 'OnInit', 1),
+        @('GenericConfirmationUIManager', 'ConfirmButtonPressed', 0),
+        @('GenericConfirmationUIManager', 'CancelButtonPressed', 0),
+        @('DialogSettingUIManager', 'CloseUI', 0),
+        @('GameOptionUIManager', 'CloseUI', 0),
+        @('TutorialUIManager', 'OnHintClosed', 0),
+        @('PlayerStore', 'ShowDisplayCaseTimingTipOnce', 0)
     )
     $checks = @($required | ForEach-Object {
         $typeName, $methodName, $parameterCount = $_

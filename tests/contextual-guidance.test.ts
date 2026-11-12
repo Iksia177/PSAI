@@ -48,6 +48,7 @@ test('status and older snapshots preserve unknown states instead of inferring un
   const defaults = await loadGuidance('');
   const status = contextualGuidance(defaults);
   assert.equal(status.context, 'awaiting_observation');
+  assert.equal(status.focus.kind, 'observe_first');
   assert.equal(status.availability.upgrades.state, 'unknown');
   const old = contextualGuidance(defaults, { features: ['afterhour', 'telephone'], day: 50 });
   assert.equal(old.availability.afterhours.state, 'unknown');
@@ -63,4 +64,19 @@ test('current visible activity keeps relevant advice and local custom instructio
   const report = contextualGuidance(defaults, { screens: [{ id: 'nightly_report' }] });
   assert.ok(report.rules.some(rule => rule.id === 'read-daily-report'));
   assert.ok(!contextualGuidance(defaults, { screens: [] }).rules.some(rule => rule.id === 'read-daily-report'));
+});
+
+test('response windows take focus while tutorial-only hints remain informational', async () => {
+  const defaults = await loadGuidance('');
+  const tutorial = { screen_id: 'tutorial_drag', requires_response: false, blocks_gameplay: null };
+  const settings = { screen_id: 'dialogue_settings', requires_response: true, blocks_gameplay: null };
+  const pending = contextualGuidance(defaults, { attention: { items: [tutorial, settings] } });
+  assert.equal(pending.focus.kind, 'respond_to_prompt');
+  assert.deepEqual(pending.focus.screen_ids, ['dialogue_settings']);
+  assert.ok(pending.rules.some(rule => rule.id === 'prompt-response'));
+  const hints = contextualGuidance(defaults, { attention: { items: [tutorial] } });
+  assert.equal(hints.focus.kind, 'read_tutorial_hint');
+  assert.match(hints.focus.instruction, /不要求立即关闭/);
+  const empty = contextualGuidance(defaults, { attention: { items: [] } });
+  assert.ok(!empty.rules.some(rule => rule.id === 'prompt-response'));
 });

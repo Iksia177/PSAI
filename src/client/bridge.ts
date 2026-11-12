@@ -33,6 +33,13 @@ export interface Receipt {
   [key: string]: unknown;
 }
 
+function deliverAttention(receipt: Receipt): Receipt {
+  const data = receipt.data as { attention?: unknown } | undefined;
+  const snapshot = receipt.snapshot as { attention?: unknown } | undefined;
+  const view = data?.attention ? data : snapshot;
+  return view?.attention ? { attention: view.attention, ...receipt } : receipt;
+}
+
 export function defaultDataDirectory(): string {
   return process.env.PSAI_DATA_DIR ?? join(homedir(), 'AppData', 'LocalLow', 'Questing Goose Studio', 'Probably Stolen', 'ModData', 'psai');
 }
@@ -118,17 +125,20 @@ export class BridgeClient {
     if (receipt.session_id !== targetSession || receipt.command_id !== id) throw new Error('receipt_identity_mismatch');
     if (!['pending', 'completed', 'error', 'uncertain'].includes(receipt.status)) throw new Error('invalid_receipt');
     if (receipt.status === 'pending' && targetSession !== current.session_id) return { ...receipt, status: 'uncertain' };
-    return receipt;
+    return deliverAttention(receipt);
   }
 
   async send(tool: Request['tool'], args: Record<string, unknown> = {}, options: {
     revision?: number; commandId?: string; session?: string;
   } = {}): Promise<Receipt> {
     const started = performance.now();
-    const finish = (receipt: Receipt): Receipt => process.env.PSAI_PROFILE === '1' ? {
-      ...receipt, client_performance: { round_trip_ms: performance.now() - started,
-        receipt_bytes: Buffer.byteLength(JSON.stringify(receipt)) },
-    } : receipt;
+    const finish = (receipt: Receipt): Receipt => {
+      const output = deliverAttention(receipt);
+      return process.env.PSAI_PROFILE === '1' ? {
+        ...output, client_performance: { round_trip_ms: performance.now() - started,
+          receipt_bytes: Buffer.byteLength(JSON.stringify(output)) },
+      } : output;
+    };
     const status = await this.status();
     if (!status.ready) throw new Error('game_not_ready');
     if (options.session && options.session !== status.session_id) throw new Error('stale_session');

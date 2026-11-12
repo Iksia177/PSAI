@@ -18,6 +18,8 @@ export function contextualGuidance(guidance: Guidance, snapshot?: unknown) {
   const screens = array(view.screens);
   const inventories = array(view.inventories);
   const panels = array(view.panels);
+  const prompts = array(object(view.attention).items);
+  const pending = prompts.filter(prompt => prompt.requires_response === true);
   const absent = (reason: string): Availability => ({ state: 'not_observed', reason });
   const unlocked = (flag: unknown): Availability => flag === true ? available : flag === false
     ? { state: 'locked', reason: '原版进度尚未开放，跳过此项，正常推进当前对白和营业。' } : unknown;
@@ -49,12 +51,14 @@ export function contextualGuidance(guidance: Guidance, snapshot?: unknown) {
     storage: !observed ? unknown : panels.some(panel => panel.kind === 'container' && panel.owner_item && (panel.can_open === true || panel.open === true))
       ? available : absent('当前未观察到可用储物容器，保留物品在主库存并正常推进。'),
     carrying: outside || choosingBag ? available : afterhours,
+    prompts: !observed ? unknown : prompts.length ? available : absent('当前没有已观察到的待处理提示或设置窗口。'),
   };
   const dependencies: Record<string, string> = {
     'showcase-purpose': 'display_case', 'morning-machines': 'machines', 'run-machines': 'machines', 'night-electricity': 'machines',
     'read-daily-report': 'reports', 'night-outing': 'afterhours', 'outing-carry-check': 'carrying', 'upgrade-review': 'upgrades',
     'trade-context': 'customer', 'accept-events': 'customer', 'wanted-evidence': 'customer',
     'contact-cards': 'cards', 'file-documents': 'documents', 'store-idle-items': 'storage',
+    'prompt-response': 'prompts',
   };
   const rules: Guidance['rules'] = [];
   const deferred: { id: string; priority: number; state: State; reason: string }[] = [];
@@ -65,6 +69,10 @@ export function contextualGuidance(guidance: Guidance, snapshot?: unknown) {
     else deferred.push({ id: rule.id, priority: rule.priority, ...condition });
   }
   return { ...guidance, context: observed ? 'current_observation' : 'awaiting_observation',
+    focus: { kind: !observed ? 'observe_first' : pending.length ? 'respond_to_prompt' : prompts.length ? 'read_tutorial_hint' : 'continue_available_tasks',
+      screen_ids: (pending.length ? pending : prompts).map(prompt => prompt.screen_id),
+      instruction: !observed ? '先 observe 获取当前窗口、对白和可用动作。' : pending.length ? '先读当前提示或设置窗口，按内容选择正常动作；不要自动确认消费、提交或剧情决定。'
+        : prompts.length ? '阅读教程提示，按当前实际操作推进；非阻塞说明不要求立即关闭。' : '按当前开放状态继续可用任务。' },
     rules, deferred_rules: deferred, availability,
     interpretation: 'features 表示模组实现的能力，不代表当前存档已开放。只将 rules 作为当前建议；deferred_rules 暂缓执行。动作缺失、未解锁或受限时重新观察并继续可用任务，单凭这些情况不要判定存档损坏。未知状态不等于未解锁。' };
 }

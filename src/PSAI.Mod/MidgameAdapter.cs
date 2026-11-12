@@ -25,15 +25,7 @@ namespace PSAI
             var map = MapUIManager.Instance;
             CaptureInteractions(snapshot, screens, available);
             CaptureInspection(snapshot, screens, available);
-            var confirmation = GenericConfirmationUIManager.Instance;
-            AddScreen("generic_confirmation", confirmation?.panel, screens, available);
-            if (confirmation != null && confirmation.panel.activeInHierarchy)
-            {
-                if (confirmation.confirmButton.activeInHierarchy)
-                    AddAction(available, "confirm_prompt", Text(confirmation.confirmButtonTMP), confirmation.ConfirmButtonPressed);
-                if (confirmation.cancelButton.activeInHierarchy)
-                    AddAction(available, "cancel_prompt", Text(confirmation.cancelButtonTMP), confirmation.CancelButtonPressed);
-            }
+            CapturePromptWindows(screens, available);
             snapshot["save_context"] = new JObject { ["slot"] = store.saveSlotId, ["run"] = store.runID,
                 ["upgrade_days_since_review"] = store.daySinceLastBrowseUpgrade,
                 ["upgrade_history_requires_current_state_check"] = true,

@@ -1,6 +1,11 @@
 {
-  "version": "local-9",
+  "version": "local-10",
   "rules": [
+    {
+      "id": "prompt-response",
+      "priority": 0,
+      "instruction": "每次观察或动作后先检查回执顶层 attention 和 guidance.focus。requires_response=true 的确认或设置窗口应先阅读内容并选择当前 controls 中启用的动作，再重新观察确认窗口消失或状态已推进；若 busy=true 或控件全部禁用，先等待并重新观察，不循环调用。确认可能消费、提交或推进剧情，不要自动点确定。设置窗口优先使用原版关闭按钮或对应 close_* 动作，不为关闭而改动设置。tutorial_hint 通常是说明或操作提示，按内容完成原版步骤；没有关闭动作时继续相应任务，不调用统一关闭教程。blocks_gameplay=null 表示尚不确定是否阻塞，不能把普通提示一律当作游戏卡死。"
+    },
     {
       "id": "progression-first",
       "priority": 0,
@@ -19,7 +24,7 @@
     {
       "id": "showcase-purpose",
       "priority": 2,
-      "instruction": "展示柜具有影响客户群体等经营功能，优先保留其中物品用于陈列，交易先使用库存及其他自有储备。需要调整陈列时先读取客户群体与效果，再结合经营目的决定。普通收纳优先选择用途合适的储物容器。"
+      "instruction": "展示柜具有影响客户群体等经营功能，优先保留其中物品用于陈列，交易先使用库存及其他自有储备。需要调整陈列时先读取客户群体与效果，再结合经营目的决定；优先开店前完成陈列，营业后调整可能次日才生效，出现 display_case_timing 提示时读取原版说明后确认。普通收纳优先选择用途合适的储物容器。"
     },
     {
       "id": "rent-and-property",

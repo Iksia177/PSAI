@@ -61,6 +61,17 @@ node src/client/cli.ts act '{"action":"close_inspection","target":"<inspection.i
 
 `afterhour_ground` 是地上的物品；带回物品要放入口袋或背包。外出背包可长期保持打开。选包比较 `capacity.total_cells` 的绝对总容量。选包提示不等于携带成功：抵达并等待 `busy=false` 后，核对 `afterhour_backpack.items` 中的实际背包及对应 `afterhour_backpack_contents`。回店后背包可能先落在 `back_counter`，检查实际落点及包内物品后再整理。
 
+## 提示、设置与教程
+
+观察和动作快照中的 `attention` 同时在 CLI/MCP 回执顶层返回，延迟通过 `result` 查询也保留。`has_pending_response` 表示存在需要回应的确认或设置窗口；`items` 提供 `screen_id`、完整原版文字、`kind`、`requires_response`、`blocks_gameplay` 及当前 `controls`。对应 `screens` 保留详细窗口和设置值。
+
+`guidance.focus` 将需回应窗口优先列出；只有教程说明时推荐先阅读再按原版任务推进。`blocks_gameplay=null` 表示尚未确认是否阻塞，不把普通提示当作卡死。`controls.enabled=false` 或游戏转场忙碌时先等待，再观察。
+
+- 通用确认框使用 `confirm_prompt` / `cancel_prompt` 或原版按钮动作，先读内容再选择。单按钮也不表示可以无条件确认。
+- 展示柜调整生效时间提示标记为 `topic=display_case_timing`，读取原版说明后确认；完整内容直接来自当前提示文本源，避免新弹窗首帧文字尚未渲染而漏读。
+- 对白设置为 `dialogue_settings`，使用 `close_dialogue_settings` 或当前原版关闭按钮。游戏设置为 `game_settings`，使用 `close_game_settings`。设置值提供读取，关闭无需修改值；保留原版关闭流程。
+- `tutorial_*` 返回当前可见教程说明及原版按钮。没有关闭按钮的箭头、操作提示通常随着完成任务消失，不提供统一跳过教程动作。
+
 ## 报告、图像与安全动作
 
 每日报纸在 `daily_news` 中读取，使用 `close_daily_news` 关闭。晨间报告、日结和日历报告分别读取对应屏幕与动作。

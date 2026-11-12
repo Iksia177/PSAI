@@ -52,6 +52,41 @@ test('observe derives guidance from its returned snapshot instead of status or p
   } finally { await server.stop(); }
 });
 
+test('prompt text is foregrounded on observe and disappears after the peer closes the window', async () => {
+  const { directory, client } = await fixture();
+  let open = true;
+  const game = peer(directory, () => ({ revision: 1, attention: { has_pending_response: open, items: open ? [{
+    screen_id: 'generic_confirmation', topic: 'display_case_timing', requires_response: true,
+    text: ['营业后放入展示柜的物品将在次日生效。'], controls: [{ action: 'confirm_prompt', enabled: true }],
+  }] : [] } }));
+  try {
+    const result = await client.send('observe');
+    assert.deepEqual(result.attention, (result.data as { attention: unknown }).attention);
+    assert.match(JSON.stringify(result.attention), /次日生效/);
+    assert.equal((result.guidance as { focus: { kind: string } }).focus.kind, 'respond_to_prompt');
+    open = false;
+    const closed = await client.send('observe');
+    assert.equal((closed.attention as { has_pending_response: boolean }).has_pending_response, false);
+    assert.equal((closed.guidance as { focus: { kind: string } }).focus.kind, 'continue_available_tasks');
+  } finally { await game.stop(); }
+});
+
+test('action and later result retrieval foreground snapshot prompts without losing original results', async () => {
+  const { directory, status, client } = await fixture();
+  const request: Request = { session_id: status.session_id, command_id: 'prompt-action', tool: 'act',
+    arguments: { action: 'begin_control' }, expected_revision: 1 };
+  const attention = { has_pending_response: true, items: [{ screen_id: 'dialogue_settings', requires_response: true,
+    text: ['对白设置'], controls: [{ action: 'close_dialogue_settings', enabled: true }] }] };
+  await writeFile(join(directory, `result-${status.session_id}-prompt-action.json`), JSON.stringify({
+    session_id: status.session_id, command_id: 'prompt-action', status: 'completed', request,
+    data: { invoked: true }, snapshot: { attention },
+  }));
+  const result = await client.send('act', request.arguments, { revision: 1, session: status.session_id, commandId: 'prompt-action' });
+  assert.deepEqual(result.attention, attention);
+  assert.deepEqual(result.data, { invoked: true });
+  assert.deepEqual((await client.result('prompt-action')).attention, attention);
+});
+
 test('round trip preserves request identity and caller arguments', async () => {
   const { directory, client } = await fixture();
   const game = peer(directory);
