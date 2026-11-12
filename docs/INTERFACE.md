@@ -2,6 +2,8 @@
 
 本页面向通过 CLI 或 MCP 游玩的 agent。先读取当前状态与 guidance，再依照当下目标操作。
 
+**开始或恢复游玩时，先阅读 `observe.guidance.focus`、`rules` 和 `availability`，后续随观察更新。** 这些内容由 CLI/MCP 自动加载偏好并结合本次快照筛选，不依赖你主动打开配置文件。无需把完整偏好文件读作任务列表；`deferred_rules` 只说明暂缓原因。优先指导是决策建议，用户当前指令优先。
+
 `progression` 提供原版开放标记；`guidance.availability` 区分 available、locked、temporarily_unavailable、not_observed 和 unknown。只有 `guidance.rules` 是当前适用的建议；`deferred_rules` 返回暂缓规则及原因，不要求现在完成。`status` 没有当前快照，先给基础指导，详细适用性在 `observe` 中计算，不复用前次存档状态。未知与暂时不可用都不代表存档损坏。开放状态随原版事件和当前场景读取，不用固定天数代替判断。普通电话入口和王尔德加点开放分别判断，联系人冷却仍按原版电话提示处理。
 
 ## 观察、动作与结果

@@ -27,7 +27,7 @@ pwsh -NoProfile -File scripts/Inspect-Game.ps1
 pwsh -NoProfile -File scripts/Test-Mod.ps1
 ```
 
-这些离线检查不要求运行游戏。`npm run test:live`、`npm run test:panels` 是会实际操作游戏的开发验收脚本，仅在明确准备好相应验收条件时运行；正常安装和游玩不需要执行它们。
+这些离线检查不要求运行游戏，也不会操作实际存档。普通安装和游玩无需执行开发检查；仓库不提供自动操作实际游戏的验收入口。
 
 保持六工具协议与现有字段兼容。游戏对象只在 Unity 主线程访问，状态和动作条件实时读取，动作调用原版交互入口。详情查询遵守窗口可见性；会话、状态版本和命令去重检查由桥接统一处理。
 

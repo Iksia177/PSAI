@@ -6,6 +6,8 @@
 
 本项目采用 **vibe coding** 开发：由人提出想法、观察游玩并反馈问题，与 AI 协作实现和迭代。
 
+**给游玩 agent：开始前请读这里。** 安装工具不等于开始游玩；先完成安装，等用户确认已进入可操作存档，再调用 `status` 和 `observe`。开始或恢复游玩时，先阅读 `observe` 返回的 `guidance.focus`、`guidance.rules` 和 `guidance.availability`，之后随新观察更新理解，再选择动作。指导会随当前进度自动交付，无需查找或通读某个偏好文件；`deferred_rules` 是暂缓事项，不是当前任务列表。不要为执行指导而尝试尚未解锁的功能。用户当前指令优先。具体接入见[给 agent 的快速入口](#给-agent-的快速入口)。
+
 ## 安装与首次使用
 
 ### Agent 侧：推荐交给 agent 自行安装
@@ -121,7 +123,7 @@ CLI 提供 `status`、`observe`、`inspect`、`actions`、`act`、`result` 六�
 ### 先连接，再按当前进度游玩
 
 1. 用户确认模组已启用、游戏已重启并进入可操作存档后，读取 `status`，检查 `online`、`ready`、`compatible`。
-2. 读取 `observe`，先看回执顶层 `attention` 和 `guidance.focus`，再看当前适用指导、对白、`customer_context`、`customer_interaction`、`trade` 和可用 `actions`。
+2. 读取 `observe`，先看回执顶层 `attention`，并阅读 `guidance.focus`、`guidance.rules`、`guidance.availability`；再结合对白、`customer_context`、`customer_interaction`、`trade` 和可用 `actions` 决定下一步。不能只读取库存或动作列表而跳过指导。
 3. 按最新 `session_id`、`revision` 和目标 ID 执行动作，再观察实际结果。
 
 `status.features` 表示模组实现的能力，不代表存档已经解锁。`progression` 返回原版进度标记；`guidance.rules` 是当前适用的建议，`deferred_rules` 给出暂缓原因，`availability` 区分未解锁、当前受限和未知。正常推进教程及可用营业，不因入口缺失或暂时不可操作就判断存档损坏。
@@ -156,5 +158,7 @@ CLI 提供 `status`、`observe`、`inspect`、`actions`、`act`、`result` 六�
 受文件访问限制的 harness 需要获得该目录的读写权限。无需修改系统 ACL、管理员提权或编辑存档。`--data-dir` / `PSAI_DATA_DIR` 只改变工具侧的查找位置，应指向游戏实际使用的通信目录，不会迁移游戏侧数据。
 
 如需覆盖默认偏好，复制 `psai.preferences.example.json` 为 `psai.preferences.local.json`，修改完整规则列表，并设置环境变量 `PSAI_PREFERENCES_FILE` 为该文件的绝对路径。读取失败时回退到默认规则并返回说明。本机配置、游戏程序集、存档、通信文件及构建产物不随仓库分发。
+
+偏好文件是配置模板，包含不同阶段的规则，不能直接当作当日待办。实际游玩读取 `observe.guidance.rules` 中已经按当前进度筛选的建议即可；`status.guidance` 仅作连接前的基础说明。
 
 [版本说明](docs/RELEASE-v0.9.5.md) · [接口说明](docs/INTERFACE.md) · [开发说明](docs/DEVELOPMENT.md)
